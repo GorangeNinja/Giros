@@ -1,0 +1,71 @@
+import pygame
+import math
+import textures
+from maps import *
+from settings import *
+
+
+class Tile:
+    window = pygame.display.set_mode((1, 1))
+
+    texture = textures.Texture()
+
+    # When I need to rescale the overlays
+    overlayList = []
+
+    def __init__(self, image, mapName, ontop=None, drawOutline=True, outlineColor=DARKGREY, outlineWidth=1):
+        self.image = image  # Either color, or image name
+        self.ontop = ontop  # When the alpha image needs a background
+        self.mapName = mapName
+
+        self.settings = Map.manager
+
+        self.drawOutline = drawOutline
+        self.outlineColor = outlineColor
+        self.outlineWidth = outlineWidth
+        self.overlay = None
+
+    def blit(self, x, y):
+        # Pixels on screen coordinates
+        px = x * Map.manager.tileSize[0] + Map.manager.margin[0]
+        py = y * Map.manager.tileSize[1] + Map.manager.margin[1]
+
+        if type(self.image) is tuple:  # If it's a color
+            pygame.draw.rect(self.window, self.image, (px, py, Map.manager.tileSize[0], Map.manager.tileSize[1]))
+        elif type(self.image) is str:  # If it's an image
+            self.window.blit(self.texture(self.image), (px, py))
+
+        if self.ontop is not None:
+            for image in self.ontop:
+                self.window.blit(self.texture(image), (px, py))
+
+        if self.overlay is not None:
+            self.window.blit(self.overlay, (px, py))
+
+        if self.drawOutline:
+            pygame.draw.rect(self.window, self.outlineColor, (px, py, Map.manager.tileSize[0], Map.manager.tileSize[1]),
+                             self.outlineWidth)
+
+    def overlayer(self, color, alpha, skip=False):
+        self.overlay = pygame.Surface((Map.manager.tileSize[0], Map.manager.tileSize[1]), pygame.SRCALPHA, 32)
+        self.overlay.fill(color + (alpha,))
+        if not skip:
+            self.overlayList.append(self)
+            self.color = color
+            self.alpha = alpha
+
+    def rescale(self):
+        self.texture.rescale()
+
+        for ele in self.overlayList:
+            # Recalls the overlay function, to reset the scale
+            if ele.overlay is not None:
+                ele.overlayer(ele.color, ele.alpha, skip=True)
+
+    def getGridMouse(self):
+        mouse = pygame.mouse.get_pos()
+        # We "remove" the margin
+        nx, ny = mouse[0]-Map.manager.margin[0], mouse[1]-Map.manager.margin[1]
+        # Tests whether or not the mouse is within the grid
+        if 0 <= nx < Map.manager.tileSize[0] * Map.manager.gridSize[0] and 0 <= ny < Map.manager.tileSize[1] * Map.manager.gridSize[1]:
+            return math.trunc(nx / Map.manager.tileSize[0]), math.trunc(ny / Map.manager.tileSize[1])
