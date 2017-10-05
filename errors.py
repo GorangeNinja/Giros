@@ -7,10 +7,10 @@ class Error:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     font = pygame.font.SysFont('Times New Roman', 28)
-    maxChars = 20
 
+    maxChars = 30
     x, y = 0, WINDOW[1]-62
-    w, h = 290, 32
+    w, h = 400, 32
     distance = 32
     textMargin = 10
 

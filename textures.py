@@ -16,10 +16,11 @@ class Texture:
 
     native = {}
     scaled = {}
+    custom = {}
 
-    def __call__(self, name):
+    def __call__(self, filename):
         try:
-            return self.scaled[name]
+            return self.scaled[filename]
         except:
             # Name not in dictionary
             return self.scaled["error_alpha.png"]
@@ -37,6 +38,16 @@ class Texture:
 
             self.native[filename] = img
             self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
+
+    def loadCustom(self, filename, w, h):
+        self.custom[filename] = pygame.transform.scale(self.native[filename], (w, h))
+
+    def callCustom(self, filename):
+        try:
+            return self.custom[filename]
+        except:
+            # Name not in dictionary
+            return self.scaled["error_alpha.png"]
 
     def rescale(self):
         for name in self.native:

@@ -2,6 +2,7 @@ import pygame
 from settings import *
 from buttons import *
 import inputbox
+import displaybox
 from errors import *
 
 
@@ -23,6 +24,7 @@ class Overlay:
                                  self.group)
 
         self.inputBox = inputbox.Input((0, 0, 0, 0), "", self.group)
+        self.displayBox = displaybox.Display((0, 0, 0, 0), self.group)
         self.mouse = pygame.mouse.get_pos()
         self.pressed = pygame.key.get_pressed()
 
@@ -37,6 +39,7 @@ class Overlay:
 
             # Draws all buttons
             self.button.update(self.group, self.mouse)
+            self.displayBox.update(self.group)
             self.inputBox.update(self.group, self.mouse)
             self.error.update()
 

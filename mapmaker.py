@@ -4,7 +4,8 @@ from tiles import *
 import matrix
 from settings import *
 import copy
-import inputbox
+from inputbox import *
+from displaybox import *
 import overlays
 from errors import *
 from prefabs import *
@@ -23,7 +24,8 @@ class Loop:
         self.tile.texture.bulk()
         self.error = Error("", 0)
         self.prefab = Prefab(self)
-        self.inputBox = inputbox.Input((0, 0, 0, 0), "", self.group)
+        self.inputBox = Input((0, 0, 0, 0), "", self.group)
+        self.displayBox = Display((0, 0, 0, 0), self.group)
 
         self.defaultUI()
 
@@ -45,6 +47,7 @@ class Loop:
 
             # Draws all buttons
             self.button.update(self.group, self.mouse)
+            self.displayBox.update(self.group)
             self.inputBox.update(self.group, self.mouse)
             self.error.update()
 
@@ -92,12 +95,14 @@ class Loop:
         self.b_new = Button((0, 0, 80, 30), self.prefab.o_newgrid, "New", self.group)
         self.b_load = Button((80, 0, 80, 30), self.prefab.o_loadmap, "Load", self.group)
         self.b_texture = Button((160, 0, 160, 30), self.prefab.o_textureSelect, "Textures", self.group)
-        self.currentmap = inputbox.Input((0, WINDOW[1]-30, 240, 30), "Map: "+Map.m.name, self.group, clickable=False)
-        self.currenttexture = inputbox.Input((240, WINDOW[1]-30, 320, 30), "Texture: " + self.selectedTexture, self.group, clickable=False)
+        self.d_currentMap = Display((0, WINDOW[1]-30, 240, 30), self.group, text="Map: "+Map.m.name)
+        self.d_currentTexture = Display((240, WINDOW[1]-30, 320, 30), self.group, text="Texture: "+self.selectedTexture)
+        self.d_currentTextureThumbnail = Display((560, WINDOW[1] - 30, 30, 30), self.group, image=self.selectedTexture)
 
     def resetDisplay(self):
         self.button.killall()
         self.inputBox.killall()
+        self.displayBox.killall()
         self.defaultUI()
 
     def quit(self):
