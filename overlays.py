@@ -33,7 +33,7 @@ class Overlay:
             pygame.draw.rect(self.window, WHITE, self.rect)
             pygame.draw.rect(self.window, BLACK, self.rect, 2)
 
-            self.text(self.group, pygame.Rect(self.rect[0], self.rect[1], self.rect[2]-self.exitButton, 30))
+            self.text(self.group, pygame.Rect(self.rect[0], self.rect[1]+5, self.rect[2]-self.exitButton, 30))
 
             # Draws all buttons
             self.button.update(self.group, self.mouse)
@@ -57,8 +57,5 @@ class Overlay:
         self.window.blit(txt, text_rect)
 
     def quit(self):
-        self.running = False
-
-    def varQuit(self):
         self.running = False
         return True

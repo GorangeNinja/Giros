@@ -8,7 +8,7 @@ import inputbox
 import overlays
 from errors import *
 from prefabs import *
-import maps
+from maps import *
 
 
 class Loop:
@@ -16,20 +16,21 @@ class Loop:
         pygame.init()
         self.window = pygame.display.set_mode(WINDOW)
         self.group = "maker"
-        self.mapgroup = "first"
+        self.selectedTexture = "textures_00.png"
 
-        self.map = maps.Map([20, 14], self.group, [32, 32], [50, 50])
-        self.tile = Tile(None, self.mapgroup)
+        self.map = Map([20, 14], "first", [32, 32], [50, 50])
+        self.tile = Tile(None)
         self.tile.texture.bulk()
         self.error = Error("", 0)
         self.prefab = Prefab(self)
+        self.inputBox = inputbox.Input((0, 0, 0, 0), "", self.group)
 
         self.defaultUI()
 
         self.mouse = pygame.mouse.get_pos()
         self.pressed = pygame.key.get_pressed()
         self.mouseMove = 0  # Used in getting the amount the mouse moved
-        self.originalMargin = self.map.margin  # Keeps the original margin so it knows how much to move
+        self.originalMargin = Map.m.margin  # Keeps the original margin so it knows how much to move
 
         self.running = True
         self.loop()
@@ -39,7 +40,7 @@ class Loop:
         while self.running:
             self.window.fill(BLACK)
             # Draws all tiles
-            for ele in self.map.grid.all():
+            for ele in Map.m.grid.all():
                 ele[2].blit(ele[0], ele[1])
 
             # Draws all buttons
@@ -67,33 +68,34 @@ class Loop:
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
-                    self.map.tileSize[0] += 5
-                    self.map.tileSize[1] += 5
+                    Map.m.tileSize[0] += 5
+                    Map.m.tileSize[1] += 5
                     self.tile.rescale()
                 if event.button == 5:
-                    self.map.tileSize[0] -= 5
-                    self.map.tileSize[1] -= 5
+                    Map.m.tileSize[0] -= 5
+                    Map.m.tileSize[1] -= 5
                     self.tile.rescale()
 
     def showGrid(self):
-        for ele in self.map.grid.all():
+        for ele in Map.m.grid.all():
             ele[2].drawOutline = not ele[2].drawOutline
 
     def move(self):
         if not self.mouseMove:
             self.mouseMove = self.mouse
-            self.originalMargin = copy.copy(self.map.margin)
-        self.map.margin[0] = self.mouse[0] - self.mouseMove[0] + self.originalMargin[0]
-        self.map.margin[1] = self.mouse[1] - self.mouseMove[1] + self.originalMargin[1]
+            self.originalMargin = copy.copy(Map.m.margin)
+        Map.m.margin[0] = self.mouse[0] - self.mouseMove[0] + self.originalMargin[0]
+        Map.m.margin[1] = self.mouse[1] - self.mouseMove[1] + self.originalMargin[1]
 
     def defaultUI(self):
         self.button = Button((WINDOW[0] - 40, 0, 40, 30), self.prefab.o_quit, "X", self.group)
         self.b_new = Button((0, 0, 80, 30), self.prefab.o_newgrid, "New", self.group)
-        self.inputBox = inputbox.Input((0, 0, 0, 0), "", self.group)
-        self.currentmap = inputbox.Input((80, 0, 160, 30), "Map: "+self.mapgroup, self.group, clickable=False)
-        self.resetUI = Button((240, 0, 160, 30), self.resetUI, "Reset UI", self.group)
+        self.b_load = Button((80, 0, 80, 30), self.prefab.o_loadmap, "Load", self.group)
+        self.b_texture = Button((160, 0, 160, 30), self.prefab.o_textureSelect, "Textures", self.group)
+        self.currentmap = inputbox.Input((0, WINDOW[1]-30, 240, 30), "Map: "+Map.m.name, self.group, clickable=False)
+        self.currenttexture = inputbox.Input((240, WINDOW[1]-30, 320, 30), "Texture: " + self.selectedTexture, self.group, clickable=False)
 
-    def resetUI(self):
+    def resetDisplay(self):
         self.button.killall()
         self.inputBox.killall()
         self.defaultUI()

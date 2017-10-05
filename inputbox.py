@@ -10,12 +10,13 @@ class Input:
     error = Error("", 0)
     manager = {}
 
-    def __init__(self, rect, text, group, onetime=False, clickable=True):
+    def __init__(self, rect, text, group, onetime=False, clickable=True, outline=3):
         self.rect = pygame.Rect(rect)
         self.text = text
         self.group = group
         self.onetime = onetime  # If this is enabled, deletes the inputbox after
         self.clickable = clickable
+        self.outline = outline
 
         self.inputString = ""
 
@@ -27,7 +28,13 @@ class Input:
         self.running = True
 
     def __call__(self):
-        return self.inputString
+        try:
+            returner = int(self.inputString)
+        except:
+            if self.inputString == "":
+                returner = None
+            else: returner = self.inputString
+        return returner
 
     def run(self):
         inputString = ""
@@ -35,7 +42,7 @@ class Input:
 
         while self.running:
             # We draw before input, cause when it's inside infinite wait loop we want everything drawn
-            pygame.draw.rect(self.window, BLACK, self.rect, 3)  # Outline
+            pygame.draw.rect(self.window, BLACK, self.rect, self.outline)  # Outline
             pygame.draw.rect(self.window, GREY, self.rect)
             self.__text(inputString)
             self.error.update()
@@ -61,17 +68,13 @@ class Input:
         if self.onetime:
             self.manager[self.group].remove(self)
 
-        try:
-            inputString = int(inputString)
-        except:
-            pass
         self.inputString = inputString
         return self.inputString
 
     def update(self, group, mouse):
         clicked = None  # So it draws them all before going into the one you clicked on
         for box in self.manager[group]:
-            pygame.draw.rect(self.window, BLACK, box.rect, 3)  # Outline
+            pygame.draw.rect(self.window, BLACK, box.rect, box.outline)  # Outline
             pygame.draw.rect(self.window, LIGHTERGREY, box.rect)
             box.__text(box.inputString)
 
@@ -97,6 +100,9 @@ class Input:
     def __text(self, string):
         txt = self.font.render(self.text + str(string), True, BLACK)
         self.window.blit(txt, self.rect)
+
+    def changeText(self, new):
+        self.inputString = new
 
     def kill(self):
         self.manager[self.group].remove(self)

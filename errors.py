@@ -9,7 +9,7 @@ class Error:
     font = pygame.font.SysFont('Times New Roman', 28)
     maxChars = 20
 
-    x, y = 0, WINDOW[1]-30
+    x, y = 0, WINDOW[1]-62
     w, h = 290, 32
     distance = 32
     textMargin = 10

@@ -7,9 +7,10 @@ import inputbox
 import overlays
 from errors import *
 from maps import *
+from functools import partial
 
 
-class Prefab():
+class Prefab:
     uniqueGroup = 0
 
     def __init__(self, parent):
@@ -33,9 +34,10 @@ class Prefab():
         overlay = overlays.Overlay((x, y, w, h), group)
         overlay.width = inputbox.Input((x + m, y + 40, w - 2 * m, 32), "Width: ", group)
         overlay.height = inputbox.Input((x + m, y + 72, w - 2 * m, 32), "Height: ", group)
-        overlay.name = inputbox.Input((x + m, y + 104, w - 2 * m, 32), "Name: ", group)
-        overlay.fill = inputbox.Input((x + m, y + 136, w - 2 * m, 32), "Fill: ", group)
-        overlay.submit = Button((x + m, y + 200, w - 2 * m, 40), overlay.varQuit, "Create", group)
+        overlay.name = inputbox.Input((x + m, y + 114, w - 2 * m, 32), "Name: ", group)
+        overlay.fill = inputbox.Input((x + m, y + 156, w - 2 * m - 32, 32), "Fill: ", group)
+        overlay.paste = Button((x + w - 32 - m, y + 156, 32, 32), partial(overlay.fill.changeText, self.parent.selectedTexture), "#", group)
+        overlay.submit = Button((x + m, y + 250, w - 2 * m, 40), overlay.quit, "Create", group)
         overlay.loop()
         if overlay.submit():
             if type(overlay.width()) is int and type(overlay.height()) is int:
@@ -45,6 +47,8 @@ class Prefab():
                         self.parent.map = Map([overlay.width(), overlay.height()], self.parent.mapgroup, [32, 32], [50, 50], fill=overlay.fill())
                     else:
                         self.parent.map = Map([overlay.width(), overlay.height()], self.parent.mapgroup, [32, 32], [50, 50])
+                    self.parent.tile.rescale()
+                    self.parent.resetDisplay()
                 else:
                     Error("Excepted string name")
             else:
@@ -65,12 +69,38 @@ class Prefab():
         w, h, m = 400, 174, 10
         x, y = WINDOW[0] / 2 - w / 2, WINDOW[1] / 2 - h / 2
         overlay = overlays.Overlay((x, y, w, h), group, exitButton=False)
-        overlay.message = inputbox.Input((x + m, y + 40, w - 2 * m, 32), "All unsaved progress will be lost", group, clickable=False)
-        overlay.message2 = inputbox.Input((x + m, y + 72, w - 2 * m, 32), "Are you sure?", group, clickable=False)
-        overlay.no = Button((x + m, y + 122, 80, 40), overlay.varQuit, "No", group)
-        overlay.yes = Button((x + w - m - 80, y + 122, 80, 40), overlay.varQuit, "Yes", group)
+        overlay.message = inputbox.Input((x + m, y + 40, w - 2 * m, 32), "All unsaved progress will be lost", group, clickable=False, outline=0)
+        overlay.message2 = inputbox.Input((x + m, y + 72, w - 2 * m, 32), "Are you sure?", group, clickable=False, outline=0)
+        overlay.no = Button((x + m, y + 122, 80, 40), overlay.quit, "No", group)
+        overlay.yes = Button((x + w - m - 80, y + 122, 80, 40), overlay.quit, "Yes", group)
         overlay.loop()
         if overlay.yes(): self.parent.quit()
+
+    def o_textureSelect(self):
+        group = "Textures"
+        w, h, m = WINDOW[0]-100, WINDOW[1]-100, 10
+        x, y = WINDOW[0] / 2 - w / 2, WINDOW[1] / 2 - h / 2
+        overlay = overlays.Overlay((x, y, w, h), group)
+        overlay.loop()
+
+    def o_loadmap(self):
+        group = "Load Map"
+        w, h, m = 400, 172, 10
+        x, y = WINDOW[0] / 2 - w / 2, WINDOW[1] / 2 - h / 2
+        overlay = overlays.Overlay((x, y, w, h), group)
+        overlay.message = inputbox.Input((x + m, y + 40, w - 2 * m, 32), "Current map will NOT be lost", group, clickable=False, outline=0)
+        overlay.name = inputbox.Input((x + m, y + 80, w - 2 * m, 32), "Name: ", group)
+        overlay.submit = Button((x + m, y + 122, w - 2 * m, 40), overlay.quit, "Load", group)
+        overlay.loop()
+        if overlay.submit():
+            if type(overlay.name()) is str:
+                if overlay.name() in Map.manager:
+                    self.parent.map.load(overlay.name())
+                    self.parent.resetDisplay()
+                else:
+                    Error("Map doesn't exist")
+            else:
+                Error("Expected string")
 
     def __group(self):  # Overlays, buttons, and inputboxes expect an unique group string
         self.uniqueGroup += 1

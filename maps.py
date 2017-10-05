@@ -4,7 +4,8 @@ from settings import *
 
 
 class Map:
-    manager = None
+    m = None
+    manager = {}
 
     def __init__(self, gridSize, name, tileSize=[32, 32], margin=[50, 50], fill=BLACK, add=True):
         if add:
@@ -13,6 +14,11 @@ class Map:
             self.margin = margin  # Can change, this represents default
 
             self.name = name
-            self.grid = matrix.Grid(self.gridSize, fill=tiles.Tile(fill, self.name))
+            self.grid = matrix.Grid(self.gridSize, fill=tiles.Tile(fill))
 
-            Map.manager = self
+            Map.manager[self.name] = self
+            Map.m = self
+
+    def load(self, mapname):
+        Map.manager[Map.m.name] = Map.m
+        Map.m = Map.manager[mapname]

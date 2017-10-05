@@ -13,12 +13,9 @@ class Tile:
     # When I need to rescale the overlays
     overlayList = []
 
-    def __init__(self, image, mapName, ontop=None, drawOutline=True, outlineColor=DARKGREY, outlineWidth=1):
+    def __init__(self, image, ontop=None, drawOutline=True, outlineColor=DARKGREY, outlineWidth=1):
         self.image = image  # Either color, or image name
         self.ontop = ontop  # When the alpha image needs a background
-        self.mapName = mapName
-
-        self.settings = Map.manager
 
         self.drawOutline = drawOutline
         self.outlineColor = outlineColor
@@ -27,11 +24,11 @@ class Tile:
 
     def blit(self, x, y):
         # Pixels on screen coordinates
-        px = x * Map.manager.tileSize[0] + Map.manager.margin[0]
-        py = y * Map.manager.tileSize[1] + Map.manager.margin[1]
+        px = x * Map.m.tileSize[0] + Map.m.margin[0]
+        py = y * Map.m.tileSize[1] + Map.m.margin[1]
 
         if type(self.image) is tuple:  # If it's a color
-            pygame.draw.rect(self.window, self.image, (px, py, Map.manager.tileSize[0], Map.manager.tileSize[1]))
+            pygame.draw.rect(self.window, self.image, (px, py, Map.m.tileSize[0], Map.m.tileSize[1]))
         elif type(self.image) is str:  # If it's an image
             self.window.blit(self.texture(self.image), (px, py))
 
@@ -43,11 +40,11 @@ class Tile:
             self.window.blit(self.overlay, (px, py))
 
         if self.drawOutline:
-            pygame.draw.rect(self.window, self.outlineColor, (px, py, Map.manager.tileSize[0], Map.manager.tileSize[1]),
+            pygame.draw.rect(self.window, self.outlineColor, (px, py, Map.m.tileSize[0], Map.m.tileSize[1]),
                              self.outlineWidth)
 
     def overlayer(self, color, alpha, skip=False):
-        self.overlay = pygame.Surface((Map.manager.tileSize[0], Map.manager.tileSize[1]), pygame.SRCALPHA, 32)
+        self.overlay = pygame.Surface((Map.m.tileSize[0], Map.m.tileSize[1]), pygame.SRCALPHA, 32)
         self.overlay.fill(color + (alpha,))
         if not skip:
             self.overlayList.append(self)
@@ -65,7 +62,7 @@ class Tile:
     def getGridMouse(self):
         mouse = pygame.mouse.get_pos()
         # We "remove" the margin
-        nx, ny = mouse[0]-Map.manager.margin[0], mouse[1]-Map.manager.margin[1]
+        nx, ny = mouse[0]-Map.m.margin[0], mouse[1]-Map.m.margin[1]
         # Tests whether or not the mouse is within the grid
-        if 0 <= nx < Map.manager.tileSize[0] * Map.manager.gridSize[0] and 0 <= ny < Map.manager.tileSize[1] * Map.manager.gridSize[1]:
-            return math.trunc(nx / Map.manager.tileSize[0]), math.trunc(ny / Map.manager.tileSize[1])
+        if 0 <= nx < Map.m.tileSize[0] * Map.m.gridSize[0] and 0 <= ny < Map.m.tileSize[1] * Map.m.gridSize[1]:
+            return math.trunc(nx / Map.m.tileSize[0]), math.trunc(ny / Map.m.tileSize[1])

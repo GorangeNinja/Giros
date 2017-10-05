@@ -36,8 +36,8 @@ class Texture:
                 img = pygame.image.load(self.path + filename).convert()
 
             self.native[filename] = img
-            self.scaled[filename] = pygame.transform.scale(img, Map.manager.tileSize)
+            self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
 
     def rescale(self):
         for name in self.native:
-            self.scaled[name] = pygame.transform.scale(self.native[name], Map.manager.tileSize)
+            self.scaled[name] = pygame.transform.scale(self.native[name], Map.m.tileSize)
