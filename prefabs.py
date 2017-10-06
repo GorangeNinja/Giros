@@ -61,23 +61,27 @@ class Prefab:
 
     def o_textureSelect(self):
         group = "Textures"
-        w, h, m = WINDOW[0]-100, WINDOW[1]-100, 10
-        x, y = WINDOW[0] / 2 - w / 2, WINDOW[1] / 2 - h / 2
+        w, h, m = WINDOW[0]-20, WINDOW[1]-100, 10
+        x, y = m, WINDOW[1] / 2 - h / 2
         size = 32
+        move = 0
         thumbnails = []
         overlay = overlays.Overlay((x, y, w, h), group)
-        for j, image in enumerate(self.texture.native):
-            Display((x+m, y+j*size+40, size, size), group, image=image)
-            Display((x + m + size, y + j * size + 40, w//4, size), group, text=image, align="mid")
-            thumbnails.append((Button((x+m+size+w//4, y+j*size+40, size, size), overlay.quit, "#", group), image))
-            if j == 15:
-                break
+        j = 0
+        for image in self.texture.native:
+            Display((x+m+move, y+j*size+40, size, size), group, image=image)
+            thumbnails.append((Button((x+m+move, y+j*size+40, size, size), overlay.quit, "", group, optimized=True), image))
+            if j == (h//size)-3:
+                move += size
+                j = 0
+            j+=1
 
         overlay.loop()
 
         for selected in thumbnails:
             if selected[0]():
                 self.parent.selectedTexture = selected[1]
+        self.killall(group)
         self.parent.resetDisplay()
 
     def o_loadmap(self):
@@ -98,6 +102,11 @@ class Prefab:
                     Error("{} doesn't exist".format(name()))
             else:
                 Error("Expected string")
+
+    def killall(self, group):
+        self.parent.button.killall(group)
+        self.parent.inputBox.killall(group)
+        self.parent.displayBox.killall(group)
 
     def __group(self):  # Overlays, buttons, and inputboxes expect an unique group string
         self.uniqueGroup += 1

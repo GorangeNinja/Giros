@@ -5,11 +5,11 @@ from settings import *
 class Button:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
-    font = pygame.font.SysFont('Times New Roman', 28)
+    font = pygame.font.SysFont(FONT, 28)
     manager = {}  # Keeps track of all the buttons, required for drawing, and updating them
 
     def __init__(self, rect, func, string, group, color=LIGHTERGREY, hover=LIGHTGREY,
-                stringColor=BLACK, outline=3, outline_color=BLACK, click=GREY, hidden=False):
+                stringColor=BLACK, outline=3, outline_color=BLACK, click=GREY, hidden=False, optimized=False):
         self.rect = pygame.Rect(rect)
         self.color = color  # Default color
         self.hover = hover  # Mouse hover color
@@ -21,6 +21,7 @@ class Button:
         self.outline_color = outline_color  # Duh
         self.click = click  # Click color
         self.hidden = hidden  # Bool
+        self.optimized = optimized
 
         self.returned = None  # What's returned when launching the function
         self.clicked = False  # To stop hold down spam click from happening
@@ -35,29 +36,37 @@ class Button:
 
     def update(self, group, mouse):
         for ele in self.manager[group]:
-            if not ele.hidden:
-                pygame.draw.rect(self.window, ele.outline_color, ele.rect, ele.outline)  # Draws outline
+            if not ele.optimized:
+                if not ele.hidden:
+                    pygame.draw.rect(self.window, ele.outline_color, ele.rect, ele.outline)  # Draws outline
 
+                    if ele.rect.collidepoint(mouse):  # Mouse is hovering over a button
+                        pygame.draw.rect(self.window, ele.hover, ele.rect)
+
+                        if pygame.mouse.get_pressed()[0] and ele.clicked is False:  # First time clicking
+                            ele.returned = ele.func()
+                            ele.clicked = True
+
+                        ele.hovering = True
+
+                    else:  # If the mouse isn't hovering over anything
+                        pygame.draw.rect(self.window, ele.color, ele.rect)
+                        ele.hovering = False
+
+                    if ele.clicked is True:  # The button is being clicked
+                        pygame.draw.rect(self.window, ele.click, ele.rect)
+
+                    if not pygame.mouse.get_pressed()[0]:
+                        ele.clicked = False
+
+                    ele.__text()
+
+            else:
+                # This part only checks for collision, useful for clickable thumbnails
                 if ele.rect.collidepoint(mouse):  # Mouse is hovering over a button
-                    pygame.draw.rect(self.window, ele.hover, ele.rect)
-
                     if pygame.mouse.get_pressed()[0] and ele.clicked is False:  # First time clicking
                         ele.returned = ele.func()
                         ele.clicked = True
-
-                    ele.hovering = True
-
-                else:  # If the mouse isn't hovering over anything
-                    pygame.draw.rect(self.window, ele.color, ele.rect)
-                    ele.hovering = False
-
-                if ele.clicked is True:  # The button is being clicked
-                    pygame.draw.rect(self.window, ele.click, ele.rect)
-
-                if not pygame.mouse.get_pressed()[0]:
-                    ele.clicked = False
-
-                ele.__text()
 
     def __text(self):
         txt = self.font.render(self.string, True, self.stringColor)
@@ -76,5 +85,5 @@ class Button:
     def kill(self):
         self.manager[self.group].remove(self)
 
-    def killall(self):
-        self.manager[self.group] = []
+    def killall(self, group):
+        self.manager[group] = []

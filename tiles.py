@@ -65,4 +65,7 @@ class Tile:
         nx, ny = mouse[0]-Map.m.margin[0], mouse[1]-Map.m.margin[1]
         # Tests whether or not the mouse is within the grid
         if 0 <= nx < Map.m.tileSize[0] * Map.m.gridSize[0] and 0 <= ny < Map.m.tileSize[1] * Map.m.gridSize[1]:
-            return math.trunc(nx / Map.m.tileSize[0]), math.trunc(ny / Map.m.tileSize[1])
+             return Map.m.grid.get(math.trunc(nx / Map.m.tileSize[0]), math.trunc(ny / Map.m.tileSize[1]))
+        else:
+            return Tile(None)
+

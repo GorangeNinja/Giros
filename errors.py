@@ -6,7 +6,7 @@ import time
 class Error:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
-    font = pygame.font.SysFont('Times New Roman', 28)
+    font = pygame.font.SysFont(FONT, 28)
 
     maxChars = 30
     x, y = 0, WINDOW[1]-62

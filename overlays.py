@@ -9,7 +9,7 @@ from errors import *
 class Overlay:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
-    font = pygame.font.SysFont('Times New Roman', 28)
+    font = pygame.font.SysFont(FONT, 28)
 
     def __init__(self, rect, group, exitButton=40):
         self.rect = pygame.Rect(rect)
@@ -51,8 +51,11 @@ class Overlay:
         self.mouse = pygame.mouse.get_pos()
         self.pressed = pygame.key.get_pressed()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+            if self.exitButton:
+                if event.type == pygame.QUIT:
+                    self.quit()
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.quit()
 
     def text(self, string, rect):
         txt = self.font.render(string, True, BLACK)

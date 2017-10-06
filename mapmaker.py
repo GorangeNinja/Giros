@@ -17,7 +17,9 @@ class Loop:
         pygame.init()
         self.window = pygame.display.set_mode(WINDOW)
         self.group = "maker"
-        self.selectedTexture = "textures_00.png"
+        self.selectedTexture = "error_alpha.png"
+        self.secondaryTexture = BLACK
+        self.selection = None
 
         self.map = Map([20, 14], "first", [32, 32], [50, 50])
         self.tile = Tile(None)
@@ -58,18 +60,39 @@ class Loop:
     def events(self):
         self.mouse = pygame.mouse.get_pos()
         self.pressed = pygame.key.get_pressed()
+        self.selection = self.tile.getGridMouse()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.running = False
+                self.prefab.o_quit()
 
-            if self.pressed[pygame.K_SPACE]:
+            elif self.pressed[pygame.K_TAB]: self.prefab.o_textureSelect()
+            elif self.pressed[pygame.K_o]: self.selection.drawOutline = False
+            elif self.pressed[pygame.K_i]: self.selection.drawOutline = True
+
+            elif self.pressed[pygame.K_SPACE]:
                 if pygame.mouse.get_pressed()[0]:
                     self.move()
                 else:
                     self.mouseMove = 0
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            # Keep this one at bottom, so the space+click doesn't interfere with the rest
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        if self.selection.ontop is None: self.selection.ontop = []
+                        self.selection.ontop.append(self.selectedTexture)
+                    elif pygame.key.get_mods() & pygame.KMOD_CTRL:
+                        if type(self.selection.image) is str:
+                            self.selectedTexture = self.selection.image
+                            self.resetDisplay()
+                    else:
+                        self.selection.image = self.selectedTexture
+                if event.button == 3:
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        self.selection.ontop = []
+                    else:
+                        self.selection.image = self.secondaryTexture
                 if event.button == 4:
                     Map.m.tileSize[0] += 5
                     Map.m.tileSize[1] += 5
@@ -100,9 +123,9 @@ class Loop:
         self.d_currentTextureThumbnail = Display((560, WINDOW[1] - 30, 30, 30), self.group, image=self.selectedTexture)
 
     def resetDisplay(self):
-        self.button.killall()
-        self.inputBox.killall()
-        self.displayBox.killall()
+        self.button.killall(self.group)
+        self.inputBox.killall(self.group)
+        self.displayBox.killall(self.group)
         self.defaultUI()
 
     def quit(self):

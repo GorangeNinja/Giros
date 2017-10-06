@@ -31,23 +31,34 @@ class Texture:
 
     def load(self, filename):
         if self.supportedFormats in filename:
-            if "alpha" in filename:
+            if "sheet" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()
+                useless, name, size, alpha = filename.split("_")
+                size = int(size)
+                for x in range(img.get_rect()[2]//size):
+                    for y in range(img.get_rect()[3]//size):
+                        image = img.subsurface((pygame.Rect(x*size, y*size, size, size)))
+                        self.add(image, name+str(x*size+y))
+
+            elif "alpha" in filename:
+                img = pygame.image.load(self.path + filename).convert_alpha()
+                self.add(img, filename)
+
             else:
                 img = pygame.image.load(self.path + filename).convert()
+                self.add(img, filename)
 
-            self.native[filename] = img
-            self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
 
-    def loadCustom(self, filename, w, h):
+
+    def add(self, img, filename):
+        self.native[filename] = img
+        self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
+
+    def addCustom(self, filename, w, h):
         self.custom[filename] = pygame.transform.scale(self.native[filename], (w, h))
 
     def callCustom(self, filename):
-        try:
-            return self.custom[filename]
-        except:
-            # Name not in dictionary
-            return self.scaled["error_alpha.png"]
+        return self.custom[filename]
 
     def rescale(self):
         for name in self.native:

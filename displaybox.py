@@ -7,7 +7,7 @@ import textures
 class Display:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
-    font = pygame.font.SysFont('Times New Roman', 28)
+    font = pygame.font.SysFont(FONT, 28)
     error = Error("", 0)
     manager = {}
     texture = textures.Texture()
@@ -22,7 +22,8 @@ class Display:
         self.outline = outline
 
         if image is not None:
-            self.texture.loadCustom(image, rect[2], rect[3])
+            if image not in self.texture.custom:
+                self.texture.addCustom(image, rect[2], rect[3])
 
         # If a group exists, append it, else create it
         if group in self.manager:
@@ -52,5 +53,5 @@ class Display:
     def kill(self):
         self.manager[self.group].remove(self)
 
-    def killall(self):
-        self.manager[self.group] = []
+    def killall(self, group):
+        self.manager[group] = []

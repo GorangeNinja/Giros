@@ -6,7 +6,7 @@ from errors import *
 class Input:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
-    font = pygame.font.SysFont('Times New Roman', 28)
+    font = pygame.font.SysFont(FONT, 28)
     error = Error("", 0)
     manager = {}
 
@@ -105,5 +105,5 @@ class Input:
     def kill(self):
         self.manager[self.group].remove(self)
 
-    def killall(self):
-        self.manager[self.group] = []
+    def killall(self, group):
+        self.manager[group] = []
