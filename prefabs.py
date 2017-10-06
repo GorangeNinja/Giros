@@ -67,14 +67,16 @@ class Prefab:
         move = 0
         thumbnails = []
         overlay = overlays.Overlay((x, y, w, h), group)
-        j = 0
+        search = Input((x + m, y + 114, w - 2 * m, 32), "Spritesheet: ", group)
+        j = 1
         for image in self.texture.native:
-            Display((x+m+move, y+j*size+40, size, size), group, image=image)
-            thumbnails.append((Button((x+m+move, y+j*size+40, size, size), overlay.quit, "", group, optimized=True), image))
-            if j == (h//size)-3:
-                move += size
-                j = 0
-            j+=1
+            if search() in image:
+                Display((x+m+move, y+j*size+40, size, size), group, image=image)
+                thumbnails.append((Button((x+m+move, y+j*size+40, size, size), overlay.quit, "", group, optimized=True), image))
+                if j == (h//size)-9:
+                    move += size
+                    j = 0
+                j+=1
 
         overlay.loop()
 
