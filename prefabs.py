@@ -34,7 +34,7 @@ class Prefab:
         overlay.loop()
         if submit():
             if type(width()) is int and type(height()) is int:
-                if type(name()) is str:
+                if type(name()) is str and name() != "":
                     self.parent.mapgroup = name()
                     if type(fill()) is str:
                         self.parent.map = Map([width(), height()], self.parent.mapgroup, [32, 32], [50, 50], fill=fill())
@@ -65,26 +65,37 @@ class Prefab:
         x, y = m, WINDOW[1] / 2 - h / 2
         size = 32
         move = 0
-        thumbnails = []
         overlay = overlays.Overlay((x, y, w, h), group)
-        search = Input((x + m, y + 114, w - 2 * m, 32), "Spritesheet: ", group)
-        j = 1
-        for image in self.texture.native:
-            if search() in image:
-                Display((x+m+move, y+j*size+40, size, size), group, image=image)
-                thumbnails.append((Button((x+m+move, y+j*size+40, size, size), overlay.quit, "", group, optimized=True), image))
-                if j == (h//size)-9:
-                    move += size
-                    j = 0
-                j+=1
+        search = Input((x + m, y+40, w - 2 * m-80, 32), "Search textures: ", group)
+        thumbnails = Button((x + m + w - 2 * m - 80, y+40, 80, 32),
+                            partial(self.o_textureLoad, w, h, m, x, y, size, move, search, group, overlay),
+                            "Search", group)
 
+        search.changeText(self.parent.latestSearch)
+        thumbnails.returned = self.o_textureLoad(w, h, m, x, y, size, move, search, group, overlay)
         overlay.loop()
-
-        for selected in thumbnails:
-            if selected[0]():
-                self.parent.selectedTexture = selected[1]
+        if thumbnails() is not None:
+            for selected in thumbnails():
+                if selected[0]():
+                    self.parent.selectedTexture = selected[1]
+        self.parent.latestSearch = search()
         self.killall(group)
         self.parent.resetDisplay()
+
+    def o_textureLoad(self, w, h, m, x, y, size, move, search, group, overlay):
+        thumbnails = []
+        j = 1
+        #if search() is None: search.changeText("")
+        for image in self.texture.native:
+            if search() in image:
+                Display((x + m + move, y + j * size + 40, size, size), group, image=image)
+                thumbnails.append((Button((x + m + move, y + j * size + 40, size, size), overlay.quit, "", group,
+                                          optimized=True), image))
+                if j == (h // size) - 9:
+                    move += size
+                    j = 0
+                j += 1
+        return thumbnails
 
     def o_loadmap(self):
         group = "Load Map"

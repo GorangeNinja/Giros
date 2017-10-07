@@ -20,6 +20,7 @@ class Loop:
         self.selectedTexture = "error_alpha.png"
         self.secondaryTexture = BLACK
         self.selection = None
+        self.latestSearch = ""
 
         self.map = Map([20, 14], "first", [32, 32], [50, 50])
         self.tile = Tile(None)

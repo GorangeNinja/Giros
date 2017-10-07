@@ -30,9 +30,7 @@ class Input:
         try:
             returner = int(self.inputString)
         except:
-            if self.inputString == "":
-                returner = None
-            else: returner = self.inputString
+            returner = self.inputString
         return returner
 
     def run(self):
