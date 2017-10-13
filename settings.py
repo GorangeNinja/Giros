@@ -1,5 +1,5 @@
 # Window stuff:
-WINDOW = (1200, 900)
+WINDOW = (800, 500)
 FONT = "times new roman"
 
 # Colors:

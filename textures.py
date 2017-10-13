@@ -14,9 +14,9 @@ class Texture:
     path = os.getcwd()
     path += "/"
 
-    native = {}
-    scaled = {}
-    custom = {}
+    native = {}  # Keeps a copy of all the unscaled images
+    scaled = {}  # Images scaled to Map.m.tileSize
+    custom = {}  # Images scaled to custom size, useful for thumbnails
 
     def __call__(self, filename):
         try:
@@ -26,35 +26,38 @@ class Texture:
             return self.scaled["error_alpha.png"]
 
     def bulk(self):
+        # Loads everything in the textures folder
         for filename in os.listdir(self.path):
             self.load(filename)
 
     def load(self, filename):
         if self.supportedFormats in filename:
-            if "sheet" in filename:
+            if "_sheet" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()
-                useless, name, size, alpha = filename.split("_")
+                name, size, useless = filename.split("_")
                 size = int(size)
+
                 for x in range(img.get_rect()[2]//size):
                     for y in range(img.get_rect()[3]//size):
                         image = img.subsurface((pygame.Rect(x*size, y*size, size, size)))
-                        self.add(image, name+str(x*size+y))
+                        self.__add(image, name+str(x*size+y))
 
-            elif "alpha" in filename:
+            elif "_alpha" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()
-                self.add(img, filename)
+                self.__add(img, filename)
 
             else:
                 img = pygame.image.load(self.path + filename).convert()
-                self.add(img, filename)
+                self.__add(img, filename)
 
 
 
-    def add(self, img, filename):
+    def __add(self, img, filename):
         self.native[filename] = img
         self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
 
     def addCustom(self, filename, w, h):
+        # Rescales an already existing image
         self.custom[filename] = pygame.transform.scale(self.native[filename], (w, h))
 
     def callCustom(self, filename):

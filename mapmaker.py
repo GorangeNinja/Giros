@@ -12,7 +12,7 @@ from prefabs import *
 from maps import *
 
 
-class Loop:
+class Maker:
     def __init__(self):
         pygame.init()
         self.window = pygame.display.set_mode(WINDOW)
@@ -22,7 +22,7 @@ class Loop:
         self.selection = None
         self.latestSearch = ""
 
-        self.map = Map([20, 14], "first", [32, 32], [50, 50])
+        self.map = Map([3, 3], "first", [32, 32], [50, 50])
         self.tile = Tile(None)
         self.tile.texture.bulk()
         self.error = Error("", 0)
@@ -50,10 +50,9 @@ class Loop:
 
             # Draws all buttons
             self.button.update(self.group, self.mouse)
-            self.displayBox.update(self.group)
+            self.displayBox.update(self.group, self.mouse)
             self.inputBox.update(self.group, self.mouse)
             self.error.update()
-
             self.events()
 
             pygame.display.update()
@@ -63,45 +62,50 @@ class Loop:
         self.pressed = pygame.key.get_pressed()
         self.selection = self.tile.getGridMouse()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.prefab.o_quit()
+        # Massive try because inputs aren't all connected to the cursor location
+        # So if I put <if self.selection is None> you wouldn't be able to move, etc...
+        try:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.prefab.o_quit()
 
-            elif self.pressed[pygame.K_TAB]: self.prefab.o_textureSelect()
-            elif self.pressed[pygame.K_o]: self.selection.drawOutline = False
-            elif self.pressed[pygame.K_i]: self.selection.drawOutline = True
+                elif self.pressed[pygame.K_TAB]: self.prefab.o_textureSelect()
+                elif self.pressed[pygame.K_o]: self.selection.drawOutline = False
+                elif self.pressed[pygame.K_i]: self.selection.drawOutline = True
 
-            elif self.pressed[pygame.K_SPACE]:
-                if pygame.mouse.get_pressed()[0]:
-                    self.move()
-                else:
-                    self.mouseMove = 0
-
-            # Keep this one at bottom, so the space+click doesn't interfere with the rest
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        if self.selection.ontop is None: self.selection.ontop = []
-                        self.selection.ontop.append(self.selectedTexture)
-                    elif pygame.key.get_mods() & pygame.KMOD_CTRL:
-                        if type(self.selection.image) is str:
-                            self.selectedTexture = self.selection.image
-                            self.resetDisplay()
+                elif self.pressed[pygame.K_SPACE]:
+                    if pygame.mouse.get_pressed()[0]:
+                        self.move()
                     else:
-                        self.selection.image = self.selectedTexture
-                if event.button == 3:
-                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        self.selection.ontop = []
-                    else:
-                        self.selection.image = self.secondaryTexture
-                if event.button == 4:
-                    Map.m.tileSize[0] += 5
-                    Map.m.tileSize[1] += 5
-                    self.tile.rescale()
-                if event.button == 5:
-                    Map.m.tileSize[0] -= 5
-                    Map.m.tileSize[1] -= 5
-                    self.tile.rescale()
+                        self.mouseMove = 0
+
+                # Keep this one at bottom, so the space+click doesn't interfere with the rest
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                            self.selection.ontop.append(self.selectedTexture)
+                        elif pygame.key.get_mods() & pygame.KMOD_CTRL:
+                            if type(self.selection.image) is str:
+                                self.selectedTexture = self.selection.image
+                                self.resetDisplay()
+                        else:
+                            self.selection.image = self.selectedTexture
+                    if event.button == 3:
+                        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                            self.selection.ontop = []
+                        else:
+                            self.selection.image = self.secondaryTexture
+                    if event.button == 4:
+                        Map.m.tileSize[0] += 5
+                        Map.m.tileSize[1] += 5
+                        self.tile.rescale()
+                    if event.button == 5:
+                        Map.m.tileSize[0] -= 5
+                        Map.m.tileSize[1] -= 5
+                        self.tile.rescale()
+
+        except AttributeError:
+            Error("Cursor outside grid")
 
     def showGrid(self):
         for ele in Map.m.grid.all():
@@ -133,4 +137,4 @@ class Loop:
         self.running = False
 
 
-l = Loop()
+m = Maker()

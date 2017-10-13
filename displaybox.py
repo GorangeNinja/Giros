@@ -12,12 +12,14 @@ class Display:
     manager = {}
     texture = textures.Texture()
 
-    def __init__(self, rect, group, text=None, image=None, align="l", outline=3):
+    def __init__(self, rect, group, text=None, image=None, func=None, align="l", outline=3):
         self.rect = pygame.Rect(rect)
         self.text = text
         self.align = align
         self.image = image
         self.group = group
+        self.func = func
+        self.returned = None
 
         self.outline = outline
 
@@ -31,7 +33,10 @@ class Display:
         else:
             self.manager[group] = [self]
 
-    def update(self, group):
+    def __call__(self):
+        return self.returned
+
+    def update(self, group, mouse):
         for box in self.manager[group]:
             pygame.draw.rect(self.window, BLACK, box.rect, box.outline)  # Outline
             pygame.draw.rect(self.window, LIGHTERGREY, box.rect)
@@ -39,6 +44,10 @@ class Display:
                 self.window.blit(self.texture.callCustom(box.image), (box.rect[0], box.rect[1]))
             if box.text is not None:
                 box.__text()
+            if box.func is not None:
+                if box.rect.collidepoint(mouse) and pygame.mouse.get_pressed()[0]:
+                    box.returned = box.func()
+
 
     def __text(self):
         if self.align == "mid":

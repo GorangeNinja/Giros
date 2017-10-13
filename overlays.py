@@ -39,7 +39,7 @@ class Overlay:
 
             # Draws all buttons
             self.button.update(self.group, self.mouse)
-            self.displayBox.update(self.group)
+            self.displayBox.update(self.group, self.mouse)
             self.inputBox.update(self.group, self.mouse)
             self.error.update()
 

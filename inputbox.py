@@ -27,11 +27,13 @@ class Input:
         self.running = True
 
     def __call__(self):
+        return self.inputString
+
+    def intCall(self):
         try:
-            returner = int(self.inputString)
+            return int(self.inputString)
         except:
-            returner = self.inputString
-        return returner
+            return None
 
     def run(self):
         self.update(self.group, None)  # So it draws all the boxes, before going into typing mode

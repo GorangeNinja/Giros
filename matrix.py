@@ -5,7 +5,8 @@ import copy
 class Grid:
     def __init__(self, size, fill=int):
         self.width, self.height = size
-        self.matrix = [[copy.copy(fill) for y in range(self.height)] for x in range(self.width)]
+        # Deepcopy cause fill is a class, caused some issues with Tile class ontop list
+        self.matrix = [[copy.deepcopy(fill) for y in range(self.height)] for x in range(self.width)]
 
     def get(self, x, y):
         return self.matrix[x][y]

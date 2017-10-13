@@ -1,6 +1,7 @@
 import pygame
 import math
 import textures
+from errors import *
 from maps import *
 from settings import *
 
@@ -13,9 +14,9 @@ class Tile:
     # When I need to rescale the overlays
     overlayList = []
 
-    def __init__(self, image, ontop=None, drawOutline=True, outlineColor=DARKGREY, outlineWidth=1):
+    def __init__(self, image, drawOutline=True, outlineColor=DARKGREY, outlineWidth=1):
         self.image = image  # Either color, or image name
-        self.ontop = ontop  # When the alpha image needs a background
+        self.ontop = []  # This is needs to be a list, and represents layers
 
         self.drawOutline = drawOutline
         self.outlineColor = outlineColor
@@ -32,9 +33,8 @@ class Tile:
         elif type(self.image) is str:  # If it's an image
             self.window.blit(self.texture(self.image), (px, py))
 
-        if self.ontop is not None:
-            for image in self.ontop:
-                self.window.blit(self.texture(image), (px, py))
+        for image in self.ontop:
+            self.window.blit(self.texture(image), (px, py))
 
         if self.overlay is not None:
             self.window.blit(self.overlay, (px, py))
@@ -67,5 +67,5 @@ class Tile:
         if 0 <= nx < Map.m.tileSize[0] * Map.m.gridSize[0] and 0 <= ny < Map.m.tileSize[1] * Map.m.gridSize[1]:
              return Map.m.grid.get(math.trunc(nx / Map.m.tileSize[0]), math.trunc(ny / Map.m.tileSize[1]))
         else:
-            return Tile(None)
+            return None
 

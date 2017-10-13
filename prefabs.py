@@ -33,17 +33,14 @@ class Prefab:
         submit = Button((x + m, y + 250, w - 2 * m, 40), overlay.quit, "Create", group)
         overlay.loop()
         if submit():
-            if type(width()) is int and type(height()) is int:
-                if type(name()) is str and name() != "":
-                    self.parent.mapgroup = name()
-                    if type(fill()) is str:
-                        self.parent.map = Map([width(), height()], self.parent.mapgroup, [32, 32], [50, 50], fill=fill())
-                    else:
-                        self.parent.map = Map([width(), height()], self.parent.mapgroup, [32, 32], [50, 50])
-                    self.parent.tile.rescale()
-                    self.parent.resetDisplay()
+            if width.intCall() is not None and height.intCall() is not None:
+                self.parent.mapgroup = name()
+                if fill() == "":
+                    self.parent.map = Map([width.intCall(), height.intCall()], self.parent.mapgroup, [32, 32], [50, 50])
                 else:
-                    Error("Excepted string name")
+                    self.parent.map = Map([width.intCall(), height.intCall()], self.parent.mapgroup, [32, 32], [50, 50], fill=fill())
+                self.parent.tile.rescale()
+                self.parent.resetDisplay()
             else:
                 Error("Expected integer width/height")
 
@@ -83,14 +80,13 @@ class Prefab:
         self.parent.resetDisplay()
 
     def o_textureLoad(self, w, h, m, x, y, size, move, search, group, overlay):
+        self.parent.displayBox.killall(group)
         thumbnails = []
         j = 1
         #if search() is None: search.changeText("")
         for image in self.texture.native:
             if search() in image:
-                Display((x + m + move, y + j * size + 40, size, size), group, image=image)
-                thumbnails.append((Button((x + m + move, y + j * size + 40, size, size), overlay.quit, "", group,
-                                          optimized=True), image))
+                thumbnails.append((Display((x + m + move, y + j * size + 40, size, size), group, image=image, func=overlay.quit), image))
                 if j == (h // size) - 9:
                     move += size
                     j = 0
