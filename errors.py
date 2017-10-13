@@ -13,7 +13,6 @@ class Error:
     w, h = 400, 32
     distance = 32  # How much each new error message moves upwards
     textMargin = 10  # Left margin for text
-    textColor = RED
 
     # This is for the transparent background
     background = pygame.Surface((w, h), pygame.SRCALPHA, 32)
@@ -21,10 +20,11 @@ class Error:
 
     manager = []  # Keeps track of all error messages
 
-    def __init__(self, text, duration=4):
+    def __init__(self, text, duration=4, color=RED):
         self.text = str(text)
         self.duration = duration  # Duration in seconds
         self.initialTime = time.time()
+        self.color = color
 
         # If the char length is too long, create a new error message with the rest
         if len(self.text) > self.maxChars:
@@ -47,5 +47,5 @@ class Error:
             self.manager.remove(remove)
 
     def __text(self, i):
-        txt = self.font.render(self.text, True, self.textColor)
+        txt = self.font.render(self.text, True, self.color)
         self.window.blit(txt, pygame.Rect(self.x+self.textMargin, self.y-(self.distance*i), self.w, self.h))

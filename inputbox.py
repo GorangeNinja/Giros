@@ -10,12 +10,13 @@ class Input:
     error = Error("", 0)
     manager = {}
 
-    def __init__(self, rect, text, group, onetime=False, outline=3):
+    def __init__(self, rect, text, group, onetime=False, outline=3, keep=False):
         self.rect = pygame.Rect(rect)
         self.text = text
         self.group = group
         self.onetime = onetime  # If this is enabled, deletes the inputbox after
         self.outline = outline
+        self.keep = keep  # If True keeps string when you want to type
 
         self.inputString = ""
 
@@ -37,7 +38,10 @@ class Input:
 
     def run(self):
         self.update(self.group, None)  # So it draws all the boxes, before going into typing mode
-        inputString = ""
+        if self.keep:
+            inputString = self.inputString
+        else:
+            inputString = ""
         while self.running:
             # We draw before input, cause when it's inside infinite wait loop we want everything drawn
             pygame.draw.rect(self.window, BLACK, self.rect, self.outline)  # Outline
@@ -100,7 +104,7 @@ class Input:
         self.window.blit(txt, self.rect)
 
     def changeText(self, new):
-        self.inputString = new
+        self.inputString = str(new)
 
     def kill(self):
         self.manager[self.group].remove(self)

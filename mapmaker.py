@@ -21,8 +21,10 @@ class Maker:
         self.secondaryTexture = BLACK
         self.selection = None
         self.latestSearch = ""
+        self.latestPage = 0
+        self.thumbnailSize = 32
 
-        self.map = Map([3, 3], "first", [32, 32], [50, 50])
+        self.map = Map([15, 12], "first", [32, 32], [50, 50])
         self.tile = Tile(None)
         self.tile.texture.bulk()
         self.error = Error("", 0)
@@ -105,7 +107,7 @@ class Maker:
                         self.tile.rescale()
 
         except AttributeError:
-            Error("Cursor outside grid")
+            Error("Cursor outside of grid")
 
     def showGrid(self):
         for ele in Map.m.grid.all():
@@ -123,6 +125,7 @@ class Maker:
         self.b_new = Button((0, 0, 80, 30), self.prefab.o_newgrid, "New", self.group)
         self.b_load = Button((80, 0, 80, 30), self.prefab.o_loadmap, "Load", self.group)
         self.b_texture = Button((160, 0, 160, 30), self.prefab.o_textureSelect, "Textures", self.group)
+        self.b_texture = Button((320, 0, 160, 30), self.prefab.o_settings, "Settings", self.group)
         self.d_currentMap = Display((0, WINDOW[1]-30, 240, 30), self.group, text="Map: "+Map.m.name)
         self.d_currentTexture = Display((240, WINDOW[1]-30, 320, 30), self.group, text="Texture: "+self.selectedTexture)
         self.d_currentTextureThumbnail = Display((560, WINDOW[1] - 30, 30, 30), self.group, image=self.selectedTexture)

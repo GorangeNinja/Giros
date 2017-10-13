@@ -17,6 +17,7 @@ class Texture:
     native = {}  # Keeps a copy of all the unscaled images
     scaled = {}  # Images scaled to Map.m.tileSize
     custom = {}  # Images scaled to custom size, useful for thumbnails
+    data = {}  # Keeps track of spritesheet tile width and height
 
     def __call__(self, filename):
         try:
@@ -36,11 +37,14 @@ class Texture:
                 img = pygame.image.load(self.path + filename).convert_alpha()
                 name, size, useless = filename.split("_")
                 size = int(size)
+                w, h = img.get_rect()[2]//size, img.get_rect()[3]//size
 
-                for x in range(img.get_rect()[2]//size):
-                    for y in range(img.get_rect()[3]//size):
+                for x in range(w):
+                    for y in range(h):
                         image = img.subsurface((pygame.Rect(x*size, y*size, size, size)))
-                        self.__add(image, name+str(x*size+y))
+                        self.__add(image, "s-"+name+str(x*size+y))
+
+                self.data["s-"+name] = [w, h, size]
 
             elif "_alpha" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()
@@ -66,3 +70,7 @@ class Texture:
     def rescale(self):
         for name in self.native:
             self.scaled[name] = pygame.transform.scale(self.native[name], Map.m.tileSize)
+
+    def rescaleCustom(self, size):
+        for name in self.custom:
+            self.custom[name] = pygame.transform.scale(self.native[name], (size, size))
