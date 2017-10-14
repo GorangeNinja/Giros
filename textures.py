@@ -1,14 +1,13 @@
 import pygame
 import os
 from settings import *
-from ui import Error
 from maps import *
 
 
 class Texture:
     window = pygame.display.set_mode((1, 1))
 
-    os.chdir(os.getcwd()+"/textures")
+    os.chdir(os.getcwd()+"/images")
     supportedFormats = ".png"
 
     path = os.getcwd()

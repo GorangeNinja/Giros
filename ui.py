@@ -1,6 +1,6 @@
 import pygame
 from settings import *
-import textures
+from textures import Texture
 import time
 
 
@@ -199,12 +199,12 @@ class Display:
     font = pygame.font.SysFont(FONT, 28)
     error = Error("", 0)
     manager = {}
-    texture = textures.Texture()
+    texture = Texture()
 
     def __init__(self, rect, group, text=None, image=None, func=None, align="l", outline=3):
         self.rect = pygame.Rect(rect)
         self.text = text
-        self.align = align # Can eigher align "l" for left, or "mid" for middle
+        self.align = align # Can either align "l" for left, or "mid" for middle
         self.image = image
         self.group = group
         self.func = func
