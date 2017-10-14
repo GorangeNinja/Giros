@@ -1,7 +1,7 @@
 import pygame
 import os
 from settings import *
-from errors import *
+from ui import Error
 from maps import *
 
 

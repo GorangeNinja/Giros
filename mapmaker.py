@@ -1,15 +1,11 @@
 import pygame
-from buttons import *
 from tiles import *
 import matrix
 from settings import *
 import copy
-from inputbox import *
-from displaybox import *
-import overlays
-from errors import *
 from prefabs import *
 from maps import *
+from ui import *
 
 
 class Maker:
@@ -107,7 +103,7 @@ class Maker:
                         self.tile.rescale()
 
         except AttributeError:
-            Error("Cursor outside of grid")
+            Error("Cursor outside of grid", duration=1)
 
     def showGrid(self):
         for ele in Map.m.grid.all():
