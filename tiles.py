@@ -17,11 +17,11 @@ class Tile:
     def __init__(self, image, drawOutline=True, outlineColor=DARKGREY, outlineWidth=1):
         self.image = image  # Either color, or image name
         self.ontop = []  # This is needs to be a list, and represents layers
+        self.overlay = None  # Use the overlayer func, adds transparent colors
 
         self.drawOutline = drawOutline
         self.outlineColor = outlineColor
         self.outlineWidth = outlineWidth
-        self.overlay = None
 
     def blit(self, x, y):
         # Pixels on screen coordinates
@@ -33,9 +33,11 @@ class Tile:
         elif type(self.image) is str:  # If it's an image
             self.window.blit(self.texture(self.image), (px, py))
 
+        # Draws all the layers
         for image in self.ontop:
             self.window.blit(self.texture(image), (px, py))
 
+        # Draws the transparent overlay
         if self.overlay is not None:
             self.window.blit(self.overlay, (px, py))
 
@@ -44,6 +46,7 @@ class Tile:
                              self.outlineWidth)
 
     def overlayer(self, color, alpha, skip=False):
+        # The skip parameter is for rescaling purposes
         self.overlay = pygame.Surface((Map.m.tileSize[0], Map.m.tileSize[1]), pygame.SRCALPHA, 32)
         self.overlay.fill(color + (alpha,))
         if not skip:
@@ -65,7 +68,4 @@ class Tile:
         nx, ny = mouse[0]-Map.m.margin[0], mouse[1]-Map.m.margin[1]
         # Tests whether or not the mouse is within the grid
         if 0 <= nx < Map.m.tileSize[0] * Map.m.gridSize[0] and 0 <= ny < Map.m.tileSize[1] * Map.m.gridSize[1]:
-             return Map.m.grid.get(math.trunc(nx / Map.m.tileSize[0]), math.trunc(ny / Map.m.tileSize[1]))
-        else:
-            return None
-
+            return Map.m.grid.get(math.trunc(nx / Map.m.tileSize[0]), math.trunc(ny / Map.m.tileSize[1]))

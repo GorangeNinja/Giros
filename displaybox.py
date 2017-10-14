@@ -15,7 +15,7 @@ class Display:
     def __init__(self, rect, group, text=None, image=None, func=None, align="l", outline=3):
         self.rect = pygame.Rect(rect)
         self.text = text
-        self.align = align
+        self.align = align # Can eigher align "l" for left, or "mid" for middle
         self.image = image
         self.group = group
         self.func = func

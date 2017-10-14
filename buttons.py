@@ -50,6 +50,7 @@ class Button:
                 else:  # If the mouse isn't hovering over anything
                     pygame.draw.rect(self.window, ele.color, ele.rect)
                     ele.hovering = False
+                    ele.clicked = False
 
                 if ele.clicked is True:  # The button is being clicked
                     pygame.draw.rect(self.window, ele.click, ele.rect)

@@ -23,13 +23,16 @@ class Input:
         # If a group exists, append it, else create it
         if group in self.manager:
             self.manager[group].append(self)
-        else: self.manager[group] = [self]
+        else:
+            self.manager[group] = [self]
 
         self.running = True
 
+    # Only returns strings
     def __call__(self):
         return self.inputString
 
+    # Tries to return int
     def intCall(self):
         try:
             return int(self.inputString)
@@ -38,10 +41,10 @@ class Input:
 
     def run(self):
         self.update(self.group, None)  # So it draws all the boxes, before going into typing mode
-        if self.keep:
-            inputString = self.inputString
-        else:
-            inputString = ""
+
+        if self.keep: inputString = self.inputString
+        else: inputString = ""
+
         while self.running:
             # We draw before input, cause when it's inside infinite wait loop we want everything drawn
             pygame.draw.rect(self.window, BLACK, self.rect, self.outline)  # Outline
@@ -63,10 +66,12 @@ class Input:
                     inputString += chr(pressed)
                 elif 255 < pressed < 266:  # Numpad numbers
                     inputString += chr(pressed - 208)
-                elif pressed == 269:
+                # Ugly as all hell, but oh well
+                elif pressed == 269 and pygame.key.get_mods() & pygame.KMOD_SHIFT:
                     inputString += "_"
 
         self.running = True
+
         if self.onetime:
             self.manager[self.group].remove(self)
 
@@ -89,6 +94,7 @@ class Input:
             clicked.run()
 
     def __get_key(self):
+        # Infinite loop until a key/mouse is pressed
         while True:
             event = pygame.event.poll()
             if event.type == pygame.KEYDOWN:

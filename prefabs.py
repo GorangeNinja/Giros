@@ -78,18 +78,21 @@ class Prefab:
         move = 0
         page = self.parent.latestPage
         overlay = overlays.Overlay((x, y, w, h), group)
-        search = Input((x + m, y+40, w - 2 * m-80, 32), "Search textures: ", group, keep=True)
+        search = Input((x + m, y+40, w - 2 * m-80, 32), "Search textures: ", group)
+        search.changeText(self.parent.latestSearch)
+
         thumbnails = Button((x + m + w - 2 * m - 80, y+40, 80, 32),
                             partial(self.o_textureLoad, w, h, m, x, y, size, move, search, group, overlay, page),
                             "Search", group)
-        for i in range(20):
+
+        for i in range(36):
             Button((x + m + i*32, y + h - 42, 32, 32),
-                   partial(self.o_textureLoad, w, h, m, x, y, size, move, search, group, overlay, i),
+                   partial(self.o_textureLoad, w, h, m, x, y, size, move, "", group, overlay, i),
                    str(i+1), group)
 
-        search.changeText(self.parent.latestSearch)
         thumbnails.returned = self.o_textureLoad(w, h, m, x, y, size, move, search, group, overlay, page)
         overlay.loop()
+
         if thumbnails() is not None:
             for selected in thumbnails():
                 if selected[0]():
@@ -102,7 +105,11 @@ class Prefab:
     def o_textureLoad(self, w, h, m, x, y, size, move, search, group, overlay, page):
         self.parent.displayBox.killall(group)
         thumbnails = []
-        name = list(self.texture.data.keys())[page]
+        temp = list(self.texture.data.keys())
+        if len(temp) < page+1:
+            page = 0
+        name = temp[page]
+
         tw, th, ts = self.texture.data[name]
         my = 0
         for j in range(th):

@@ -33,6 +33,7 @@ class Texture:
 
     def load(self, filename):
         if self.supportedFormats in filename:
+            # Sheet format <name_tilesize_sheet.png>
             if "_sheet" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()
                 name, size, useless = filename.split("_")
@@ -45,7 +46,7 @@ class Texture:
                         self.__add(image, "s-"+name+str(x*size+y))
 
                 self.data["s-"+name] = [w, h, size]
-
+            # Transparent image format <name_alpha.png>
             elif "_alpha" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()
                 self.__add(img, filename)
