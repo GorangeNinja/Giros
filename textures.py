@@ -39,10 +39,12 @@ class Texture:
                 size = int(size)
                 w, h = img.get_rect()[2]//size, img.get_rect()[3]//size
 
-                for x in range(w):
-                    for y in range(h):
+                i = 0
+                for y in range(h):
+                    for x in range(w):
                         image = img.subsurface((pygame.Rect(x*size, y*size, size, size)))
-                        self.__add(image, "s-"+name+str(x*size+y))
+                        self.__add(image, "s-"+name+str(i))
+                        i += 1
 
                 self.data["s-"+name] = [w, h, size]
             # Transparent image format <name_alpha.png>
