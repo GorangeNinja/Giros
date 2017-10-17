@@ -15,8 +15,7 @@ class Tile:
     overlayList = []
 
     def __init__(self, image, drawOutline=True, outlineColor=DARKGREY, outlineWidth=1):
-        self.image = image  # Either color, or image name
-        self.ontop = []  # This is needs to be a list, and represents layers
+        self.image = [image, None, None, None, None, None]  # Either color, or image name
         self.overlay = None  # Use the overlayer func, adds transparent colors
 
         self.drawOutline = drawOutline
@@ -28,14 +27,11 @@ class Tile:
         px = x * Map.m.tileSize[0] + Map.m.margin[0]
         py = y * Map.m.tileSize[1] + Map.m.margin[1]
 
-        if type(self.image) is tuple:  # If it's a color
-            pygame.draw.rect(self.window, self.image, (px, py, Map.m.tileSize[0], Map.m.tileSize[1]))
-        elif type(self.image) is str:  # If it's an image
-            self.window.blit(self.texture(self.image), (px, py))
-
-        # Draws all the layers
-        for image in self.ontop:
-            self.window.blit(self.texture(image), (px, py))
+        for image in self.image:
+            if type(image) is tuple:  # If it's a color
+                pygame.draw.rect(self.window, image, (px, py, Map.m.tileSize[0], Map.m.tileSize[1]))
+            elif type(image) is str:  # If it's an image
+                self.window.blit(self.texture(image), (px, py))
 
         # Draws the transparent overlay
         if self.overlay is not None:
