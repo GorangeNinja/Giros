@@ -6,11 +6,11 @@ from maps import *
 from functools import partial
 import textures
 from ui import *
+import copy
 
 
 # This is where dreams come to die
 class Prefab:
-    uniqueGroup = 0
     texture = textures.Texture()
 
     def __init__(self, parent):
@@ -33,9 +33,9 @@ class Prefab:
             if width.intCall() is not None and height.intCall() is not None:
                 self.parent.mapgroup = name()
                 if fill() == "":
-                    self.parent.map = Map([width.intCall(), height.intCall()], self.parent.mapgroup, [32, 32], [50, 50])
+                    self.parent.map = Map([width.intCall(), height.intCall()], self.parent.mapgroup)
                 else:
-                    self.parent.map = Map([width.intCall(), height.intCall()], self.parent.mapgroup, [32, 32], [50, 50], fill=fill())
+                    self.parent.map = Map([width.intCall(), height.intCall()], self.parent.mapgroup, fill=fill())
                 self.parent.tile.rescale()
                 self.parent.resetDisplay()
             else:
@@ -43,16 +43,29 @@ class Prefab:
 
     def o_settings(self):
         group = "Settings"
-        w, h, m = 300, 174, 10
+        w, h, m = 600, 400, 10
         x, y = WINDOW[0] / 2 - w / 2, WINDOW[1] / 2 - h / 2
         overlay = Overlay((x, y, w, h), group)
-        thumbnailSize = Input((x + m, y + 80, w - 2 * m, 32), "Thumbnail Size: ", group)
+        mapName = Input((x + m, y + 40, w-2*m, 32), "Map Name: ", group)
+        mapName.changeText(Map.m.name)
+        thumbnailSize = Input((x + m, y + 80, w-2*m, 32), "Thumbnail Size: ", group)
         thumbnailSize.changeText(self.parent.thumbnailSize)
-        submit = Button((x + m, y + 122, w - 2 * m, 40), overlay.quit, "Save", group)
+        submit = Button((x + m, y + h - 40 - m, w - 2 * m, 40), overlay.quit, "Save", group)
+
+        uilist = []
+        for i in range(12):
+            uilist.append([Input((0, 0, w - 4 * m, 32), "Test{}".format(i), group)])
+        Scroll((x + m, y + h//2 - m, w - 2 * m, 150), uilist, group)
         overlay.loop()
-        if submit() and thumbnailSize.intCall() is not None:
-            self.parent.thumbnailSize = thumbnailSize.intCall()
-            self.texture.rescaleCustom(thumbnailSize.intCall())
+        if submit():
+            if thumbnailSize.intCall() is not None:
+                self.parent.thumbnailSize = thumbnailSize.intCall()
+                self.texture.rescaleCustom(thumbnailSize.intCall())
+            if mapName() is not "":
+                oldName = Map.m.name
+                Map.m.name = mapName()
+                Map.manager[mapName()] = Map.manager.pop(oldName)
+                self.parent.resetDisplay()
 
     def o_quit(self):
         group = "Quit"
@@ -71,77 +84,69 @@ class Prefab:
         w, h, m = WINDOW[0]-20, WINDOW[1]-100, 10
         x, y = m, WINDOW[1] / 2 - h / 2
         size = self.parent.thumbnailSize
-        move = 0
         page = self.parent.latestPage
         overlay = Overlay((x, y, w, h), group)
         search = Input((x + m, y+40, w - 2 * m-80, 32), "Search textures: ", group)
         search.changeText(self.parent.latestSearch)
 
         thumbnails = Button((x + m + w - 2 * m - 80, y+40, 80, 32),
-                            partial(self.o_textureLoad, w, h, m, x, y, size, move, search, group, overlay, page),
+                            partial(self.o_textureLoad, w, h, m, x, y, size, search, group, overlay, page),
                             "Search", group)
 
         for i in range(36):
             Button((x + m + i*32, y + h - 42, 32, 32),
-                   partial(self.o_textureLoad, w, h, m, x, y, size, move, "", group, overlay, i),
+                   partial(self.o_textureLoad, w, h, m, x, y, size, "", group, overlay, i),
                    str(i+1), group)
 
-        thumbnails.returned = self.o_textureLoad(w, h, m, x, y, size, move, search, group, overlay, page)
+        thumbnails.returned = self.o_textureLoad(w, h, m, x, y, size, search, group, overlay, page)
+
         overlay.loop()
 
         if thumbnails() is not None:
-            for selected in thumbnails():
-                if selected[0]():
-                    self.parent.selectedTexture = selected[1]
+            for line in thumbnails():
+                for img in line:
+                    if img():
+                        self.parent.selectedTexture = img.image
 
         self.parent.latestSearch = search()
-        self.killall(group)
         self.parent.resetDisplay()
 
-    def o_textureLoad(self, w, h, m, x, y, size, move, search, group, overlay, page):
+    def o_textureLoad(self, w, h, m, x, y, size, search, group, overlay, page):
         self.parent.displayBox.killall(group)
-        thumbnails = []
+        line = []
+        column = []
         temp = list(self.texture.data.keys())
         if len(temp) < page+1:
             page = 0
         name = temp[page]
 
         tw, th, ts = self.texture.data[name]
-        my = 0
+        p = 0
         for j in range(th):
             for i in range(tw):
-                if y + j * size + 40 + 2*size + my > h-3*m:
-                    move += tw*size
-                    my -= j*size
-                thumbnails.append((Display((x + m + size*i + move, y + j * size + 40 + 6*m + my, size, size), group,
-                                           image=name+str(i*ts+j), func=overlay.quit), name+str(i*ts+j)))
+                line.append(Display((i*size, 0, size, size), group,
+                                    image=name+str(p), func=overlay.quit))
+                p += 1
+            column.append(line)
+            line = []
         self.parent.latestPage = page
-        return thumbnails
+        Scroll((x + m, y + 80, w - 2 * m, h-150), column, group, movespeed=size)
+        return column
 
     def o_loadmap(self):
         group = "Load Map"
-        w, h, m = 400, 172, 10
+        w, h, m = 400, 500, 10
         x, y = WINDOW[0] / 2 - w / 2, WINDOW[1] / 2 - h / 2
         overlay = Overlay((x, y, w, h), group)
-        Display((x + m, y + 40, w - 2 * m, 32), group, text="Current map will NOT be lost", align="mid", outline=0)
-        name = Input((x + m, y + 80, w - 2 * m, 32), "Name: ", group)
-        submit = Button((x + m, y + 122, w - 2 * m, 40), overlay.quit, "Load", group)
+        Display((x + m, y + 40, w - 2 * m, 32), group, text="Current map will NOT be lost", align="m", outline=0)
+        uilist = []
+        for i, level in enumerate(Map.manager):
+            uilist.append([Display((0, 0, w - 2 * m - 52, 32), group, level),
+                           Button((w - 2 * m - 52, 0, 32, 32), overlay.quit, "#", group)])
+
+        Scroll((x + m, y + 80, w - 2 * m, 406), uilist, group)
         overlay.loop()
-        if submit():
-            if type(name()) is str:
-                if name() in Map.manager:
-                    self.parent.map.load(name())
-                    self.parent.resetDisplay()
-                else:
-                    Error("{} doesn't exist".format(name()))
-            else:
-                Error("Expected string")
-
-    def killall(self, group):
-        self.parent.button.killall(group)
-        self.parent.inputBox.killall(group)
-        self.parent.displayBox.killall(group)
-
-    def __group(self):  # Overlays, buttons, and inputboxes expect an unique group string
-        self.uniqueGroup += 1
-        return str(self.uniqueGroup)
+        for element in uilist:
+            if element[1]():
+                self.parent.map.load(element[0].text)
+                self.parent.resetDisplay()
