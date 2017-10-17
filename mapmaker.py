@@ -19,8 +19,10 @@ class Maker:
         self.latestSearch = ""
         self.latestPage = 0
         self.thumbnailSize = 32
+        self.currentLayer = 0
 
-        self.map = Map([15, 12], "first", [32, 32], [50, 50])
+        self.map = Map([15, 12], "first", [32, 32], [100, 100])
+
         self.tile = Tile(None)
         self.tile.texture.bulk()
         self.error = Error("", 0)
@@ -77,30 +79,44 @@ class Maker:
                     else:
                         self.mouseMove = 0
 
+                if pygame.mouse.get_pressed()[0]:
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        if self.currentLayer < len(self.tile.image) - 1:
+                            self.selection.image[self.currentLayer+1] = self.selectedTexture
+
+                    elif pygame.key.get_mods() & pygame.KMOD_CTRL:
+                        if type(self.selection.image[self.currentLayer]) is str:
+                            self.selectedTexture = self.selection.image[self.currentLayer]
+                            self.resetDisplay()
+                    else:
+                        self.selection.image[self.currentLayer] = self.selectedTexture
+                if pygame.mouse.get_pressed()[2]:
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        self.selection.image = [None, None, None, None, None, None]
+                    else:
+                        self.selection.image[self.currentLayer] = None
+
                 # Keep this one at bottom, so the space+click doesn't interfere with the rest
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                            self.selection.ontop.append(self.selectedTexture)
-                        elif pygame.key.get_mods() & pygame.KMOD_CTRL:
-                            if type(self.selection.image) is str:
-                                self.selectedTexture = self.selection.image
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        if event.button == 5:
+                            if self.currentLayer < len(self.tile.image) - 1:
+                                self.currentLayer += 1
                                 self.resetDisplay()
-                        else:
-                            self.selection.image = self.selectedTexture
-                    if event.button == 3:
-                        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                            self.selection.ontop = []
-                        else:
-                            self.selection.image = self.secondaryTexture
-                    if event.button == 4:
-                        Map.m.tileSize[0] += 5
-                        Map.m.tileSize[1] += 5
-                        self.tile.rescale()
-                    if event.button == 5:
-                        Map.m.tileSize[0] -= 5
-                        Map.m.tileSize[1] -= 5
-                        self.tile.rescale()
+                        if event.button == 4:
+                            if self.currentLayer > 0:
+                                self.currentLayer -= 1
+                                self.resetDisplay()
+
+                    else:
+                        if event.button == 4:
+                            Map.m.tileSize[0] += 5
+                            Map.m.tileSize[1] += 5
+                            self.tile.rescale()
+                        if event.button == 5:
+                            Map.m.tileSize[0] -= 5
+                            Map.m.tileSize[1] -= 5
+                            self.tile.rescale()
 
         except AttributeError:
             Error("Cursor outside of grid", duration=1)
@@ -117,20 +133,31 @@ class Maker:
         Map.m.margin[1] = self.mouse[1] - self.mouseMove[1] + self.originalMargin[1]
 
     def defaultUI(self):
+        b = WINDOW[1] - 30
         self.button = Button((WINDOW[0] - 40, 0, 40, 30), self.prefab.o_quit, "X", self.group)
-        self.b_new = Button((0, 0, 80, 30), self.prefab.o_newgrid, "New", self.group)
-        self.b_load = Button((80, 0, 80, 30), self.prefab.o_loadmap, "Load", self.group)
-        self.b_texture = Button((160, 0, 160, 30), self.prefab.o_textureSelect, "Textures", self.group)
-        self.b_texture = Button((320, 0, 160, 30), self.prefab.o_settings, "Settings", self.group)
-        self.d_currentMap = Display((0, WINDOW[1]-30, 240, 30), self.group, text="Map: "+Map.m.name)
-        self.d_currentTexture = Display((240, WINDOW[1]-30, 320, 30), self.group, text="Texture: "+self.selectedTexture)
-        self.d_currentTextureThumbnail = Display((560, WINDOW[1] - 30, 30, 30), self.group, image=self.selectedTexture)
+        Button((0, 0, 80, 30), self.prefab.o_newgrid, "New", self.group)
+        Button((80, 0, 80, 30), self.prefab.o_loadmap, "Load", self.group)
+        Button((160, 0, 160, 30), self.prefab.o_textureSelect, "Textures", self.group)
+        Button((320, 0, 160, 30), self.prefab.o_settings, "Settings", self.group)
+        Display((0, b, 240, 30), self.group, text="Map: "+Map.m.name)
+        Display((240, b, 320, 30), self.group, text="Texture: "+self.selectedTexture)
+        Display((560, b, 30, 30), self.group, image=self.selectedTexture)
+        Display((590, b, 80, 30), self.group, text="Layer", align="m")
+        for i in range(6):
+            if i == self.currentLayer:
+                Display((670+i*30,b,30,30), self.group, str(i), func=partial(self.layer, i), color=DARKGREY, align="m")
+            else:
+                Display((670+i*30,b,30,30), self.group, str(i), func=partial(self.layer, i), color=GREY, align="m")
 
     def resetDisplay(self):
         self.button.killall(self.group)
         self.inputBox.killall(self.group)
         self.displayBox.killall(self.group)
         self.defaultUI()
+
+    def layer(self, number):
+        self.currentLayer = number
+        self.resetDisplay()
 
     def quit(self):
         self.running = False
