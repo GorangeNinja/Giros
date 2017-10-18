@@ -13,15 +13,15 @@ class Maker:
         pygame.init()
         self.window = pygame.display.set_mode(WINDOW)
         self.group = "maker"
-        self.selectedTexture = "error_alpha.png"
+        self.sList = ["error_alpha.png", "error_alpha.png", "error_alpha.png", "error_alpha.png", "error_alpha.png"]
+        self.sCurrent = 0
         self.secondaryTexture = BLACK
         self.selection = None
         self.latestSearch = ""
         self.latestPage = 0
         self.thumbnailSize = 32
         self.currentLayer = 0
-
-        self.map = Map([15, 12], "first", [32, 32], [100, 100])
+        self.map = Map([15, 12], "first")
 
         self.tile = Tile(None)
         self.tile.texture.bulk()
@@ -53,6 +53,7 @@ class Maker:
             self.displayBox.update(self.group, self.mouse)
             self.inputBox.update(self.group, self.mouse)
             self.error.update()
+
             self.events()
 
             pygame.display.update()
@@ -68,58 +69,75 @@ class Maker:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.prefab.o_quit()
-
-                elif self.pressed[pygame.K_TAB]: self.prefab.o_textureSelect()
-                elif self.pressed[pygame.K_o]: self.selection.drawOutline = False
-                elif self.pressed[pygame.K_i]: self.selection.drawOutline = True
-
-                elif self.pressed[pygame.K_SPACE]:
-                    if pygame.mouse.get_pressed()[0]:
-                        self.move()
-                    else:
-                        self.mouseMove = 0
-
-                if pygame.mouse.get_pressed()[0]:
-                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        if self.currentLayer < len(self.tile.image) - 1:
-                            self.selection.image[self.currentLayer+1] = self.selectedTexture
-
-                    elif pygame.key.get_mods() & pygame.KMOD_CTRL:
-                        if type(self.selection.image[self.currentLayer]) is str:
-                            self.selectedTexture = self.selection.image[self.currentLayer]
-                            self.resetDisplay()
-                    else:
-                        self.selection.image[self.currentLayer] = self.selectedTexture
-                if pygame.mouse.get_pressed()[2]:
-                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        self.selection.image = [None, None, None, None, None, None]
-                    else:
-                        self.selection.image[self.currentLayer] = None
-
-                # Keep this one at bottom, so the space+click doesn't interfere with the rest
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                        if event.button == 5:
+                # Checks if the mouse isn't on a button or display box
+                if not (Button.hovered or Display.hovered):
+                    # TAB
+                    if self.pressed[pygame.K_TAB]: self.prefab.o_textureSelect()
+                    # O
+                    elif self.pressed[pygame.K_o]: self.selection.drawOutline = False
+                    # I
+                    elif self.pressed[pygame.K_i]: self.selection.drawOutline = True
+                    # SPACE + CLICK
+                    elif self.pressed[pygame.K_SPACE]:
+                        if pygame.mouse.get_pressed()[0]: self.move()
+                        else: self.mouseMove = 0
+                    # LEFT CLICK
+                    elif pygame.mouse.get_pressed()[0]:
+                        # LEFT CLICK + SHIFT
+                        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
                             if self.currentLayer < len(self.tile.image) - 1:
-                                self.currentLayer += 1
+                                self.selection.image[self.currentLayer+1] = self.sList[self.sCurrent]
+                        # LEFT CLICK + CTRL
+                        elif pygame.key.get_mods() & pygame.KMOD_CTRL:
+                            if type(self.selection.image[self.currentLayer]) is str:
+                                self.sList[self.sCurrent] = self.selection.image[self.currentLayer]
                                 self.resetDisplay()
-                        if event.button == 4:
-                            if self.currentLayer > 0:
-                                self.currentLayer -= 1
-                                self.resetDisplay()
+                        # LEFT CLICK
+                        else: self.selection.image[self.currentLayer] = self.sList[self.sCurrent]
+                    # RIGHT CLICK
+                    elif pygame.mouse.get_pressed()[2]:
+                        # RIGHT CLICK + SHIFT
+                        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                            self.selection.image = [None, None, None, None, None, None]
+                        # RIGHT CLICK
+                        else: self.selection.image[self.currentLayer] = None
+                    # Keep this one at bottom, so the space+click doesn't interfere with the rest
+                    # SCROLL
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        # SCROLL + SHIFT
+                        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                            # UP SCROLL + SHIFT
+                            if event.button == 4: self.currentLayer = self.check(self.currentLayer, self.tile.image, 1)
+                            # DOWN SCROLL + SHIFT
+                            if event.button == 5: self.currentLayer = self.check(self.currentLayer, 0, 0)
+                        # SCROLL + CTRL
+                        elif pygame.key.get_mods() & pygame.KMOD_CTRL:
+                            if event.button == 4: self.sCurrent = self.check(self.sCurrent, self.sList, 1)
+                            if event.button == 5: self.sCurrent = self.check(self.sCurrent, 0, 0)
 
-                    else:
-                        if event.button == 4:
-                            Map.m.tileSize[0] += 5
-                            Map.m.tileSize[1] += 5
-                            self.tile.rescale()
-                        if event.button == 5:
-                            Map.m.tileSize[0] -= 5
-                            Map.m.tileSize[1] -= 5
-                            self.tile.rescale()
+                        else:
+                            if event.button == 4:
+                                Map.m.tileSize[0] += 5
+                                Map.m.tileSize[1] += 5
+                                self.tile.rescale()
+                            if event.button == 5:
+                                Map.m.tileSize[0] -= 5
+                                Map.m.tileSize[1] -= 5
+                                self.tile.rescale()
 
         except AttributeError:
             Error("Cursor outside of grid", duration=1)
+
+    def check(self, a, b, c):
+        # Keeps a within 0 and len(b), when you add/subtract
+        if c:
+            if a < len(b) - 1:
+                a += 1
+        else:
+            if a > 0:
+                a -= 1
+        self.resetDisplay()
+        return a
 
     def showGrid(self):
         for ele in Map.m.grid.all():
@@ -140,14 +158,22 @@ class Maker:
         Button((160, 0, 160, 30), self.prefab.o_textureSelect, "Textures", self.group)
         Button((320, 0, 160, 30), self.prefab.o_settings, "Settings", self.group)
         Display((0, b, 240, 30), self.group, text="Map: "+Map.m.name)
-        Display((240, b, 320, 30), self.group, text="Texture: "+self.selectedTexture)
-        Display((560, b, 30, 30), self.group, image=self.selectedTexture)
-        Display((590, b, 80, 30), self.group, text="Layer", align="m")
+        Display((240, b, 320, 30), self.group, text="Texture: "+self.sList[self.sCurrent])
+        for i in range(5):
+            if i == self.sCurrent:
+                Display((560+i*30, b, 30, 30), self.group, func=partial(self.selected, i),
+                        image=self.sList[i], outline=5, oColor=RED)
+            else:
+                Display((560+i*30, b, 30, 30), self.group, func=partial(self.selected, i), image=self.sList[i])
+
+        Display((WINDOW[0]-110, b, 80, 30), self.group, text="Layer", align="m")
         for i in range(6):
             if i == self.currentLayer:
-                Display((670+i*30,b,30,30), self.group, str(i), func=partial(self.layer, i), color=DARKGREY, align="m")
+                Display((WINDOW[0]-30,b-i*30,30,30), self.group, str(i), func=partial(self.layer, i),
+                        color=DARKGREY, align="m")
             else:
-                Display((670+i*30,b,30,30), self.group, str(i), func=partial(self.layer, i), color=GREY, align="m")
+                Display((WINDOW[0]-30,b-i*30,30,30), self.group, str(i), func=partial(self.layer, i),
+                        color=GREY, align="m")
 
     def resetDisplay(self):
         self.button.killall(self.group)
@@ -157,6 +183,10 @@ class Maker:
 
     def layer(self, number):
         self.currentLayer = number
+        self.resetDisplay()
+
+    def selected(self, number):
+        self.sCurrent = number
         self.resetDisplay()
 
     def quit(self):

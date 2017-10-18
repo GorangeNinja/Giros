@@ -25,7 +25,8 @@ class Prefab:
         height = Input((x + m, y + 72, w - 2 * m, 32), "Height: ", group)
         name = Input((x + m, y + 114, w - 2 * m, 32), "Name: ", group)
         fill = Input((x + m, y + 156, w - 2 * m - 64, 32), "Fill: ", group)
-        Button((x + w - 64 - m, y + 156, 32, 32), partial(fill.changeText, self.parent.selectedTexture), "#", group)
+        Button((x + w - 64 - m, y + 156, 32, 32),
+               partial(fill.changeText, self.parent.sList[self.parent.sCurrent]), "#", group)
         Button((x + w - 32 - m, y + 156, 32, 32), self.o_textureSelect, "@", group)
         submit = Button((x + m, y + 250, w - 2 * m, 40), overlay.quit, "Create", group)
         overlay.loop()
@@ -106,7 +107,7 @@ class Prefab:
             for line in thumbnails():
                 for img in line:
                     if img():
-                        self.parent.selectedTexture = img.image
+                        self.parent.sList[self.parent.sCurrent] = img.image
 
         self.parent.latestSearch = search()
         self.parent.resetDisplay()
@@ -120,17 +121,17 @@ class Prefab:
             page = 0
         name = temp[page]
 
-        tw, th, ts = self.texture.data[name]
+        tw, th, tsx, tsy = self.texture.data[name]
         p = 0
         for j in range(th):
             for i in range(tw):
                 line.append(Display((i*size, 0, size, size), group,
-                                    image=name+str(p), func=overlay.quit))
+                                    image=name+"-"+str(p), func=overlay.quit))
                 p += 1
             column.append(line)
             line = []
         self.parent.latestPage = page
-        Scroll((x + m, y + 80, w - 2 * m, h-150), column, group, movespeed=size)
+        Scroll((x + m, y + 80, w - 2 * m, h-140), column, group, movespeed=size)
         return column
 
     def o_loadmap(self):

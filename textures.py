@@ -35,18 +35,18 @@ class Texture:
             # Sheet format <name_tilesize_sheet.png>
             if "_sheet" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()
-                name, size, useless = filename.split("_")
-                size = int(size)
-                w, h = img.get_rect()[2]//size, img.get_rect()[3]//size
+                name, sx, sy, useless = filename.split("_")
+                sx, sy = int(sx), int(sy)
+                w, h = img.get_rect()[2]//sx, img.get_rect()[3]//sy
 
                 i = 0
                 for y in range(h):
                     for x in range(w):
-                        image = img.subsurface((pygame.Rect(x*size, y*size, size, size)))
-                        self.__add(image, "s-"+name+str(i))
+                        image = img.subsurface((pygame.Rect(x*sx, y*sy, sx, sy)))
+                        self.__add(image, "s-"+name+"-"+str(i))
                         i += 1
 
-                self.data["s-"+name] = [w, h, size]
+                self.data["s-"+name] = [w, h, sx, sy]
             # Transparent image format <name_alpha.png>
             elif "_alpha" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()

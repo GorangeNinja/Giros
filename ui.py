@@ -58,6 +58,7 @@ class Button:
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     font = pygame.font.SysFont(FONT, 28)
     manager = {}  # Keeps track of all the buttons, required for drawing, and updating them
+    hovered = False
 
     def __init__(self, rect, func, string, group, color=LIGHTERGREY, hover=LIGHTGREY,
                 stringColor=BLACK, outline=3, outline_color=BLACK, click=GREY, hidden=False):
@@ -85,11 +86,13 @@ class Button:
         return self.returned
 
     def update(self, group, mouse):
+        Button.hovered = False
         for ele in self.manager[group]:
             if not ele.hidden:
                 pygame.draw.rect(self.window, ele.outline_color, ele.rect, ele.outline)  # Draws outline
 
                 if ele.rect.collidepoint(mouse):  # Mouse is hovering over a button
+                    Button.hovered = True
                     pygame.draw.rect(self.window, ele.hover, ele.rect)
 
                     if pygame.mouse.get_pressed()[0] and ele.clicked is False:  # First time clicking
@@ -206,8 +209,10 @@ class Display:
     error = Error("", 0)
     manager = {}
     texture = Texture()
+    hovered = False
 
-    def __init__(self, rect, group, text=None, image=None, func=None, align="l", outline=3, color=LIGHTERGREY):
+    def __init__(self, rect, group, text=None, image=None, func=None, align="l", outline=3,
+                 color=LIGHTERGREY, oColor=BLACK):
         self.rect = pygame.Rect(rect)
         self.text = text
         self.align = align # Can either align "l" for left, or "mid" for middle
@@ -219,6 +224,7 @@ class Display:
         self.color = color
 
         self.outline = outline
+        self.oColor = oColor
 
         if image is not None:
             if image not in self.texture.custom:
@@ -234,16 +240,18 @@ class Display:
         return self.returned
 
     def update(self, group, mouse):
+        Display.hovered = False
         for box in self.manager[group]:
             if not box.hidden:
-                pygame.draw.rect(self.window, BLACK, box.rect, box.outline)  # Outline
+                pygame.draw.rect(self.window, box.oColor, box.rect, box.outline)  # Outline
                 pygame.draw.rect(self.window, box.color, box.rect)
                 if box.image is not None:
                     self.window.blit(self.texture.callCustom(box.image), (box.rect[0], box.rect[1]))
                 if box.text is not None:
                     box.__text()
-                if box.func is not None:
-                    if box.rect.collidepoint(mouse) and pygame.mouse.get_pressed()[0]:
+                if box.rect.collidepoint(mouse):
+                    Display.hovered = True
+                    if box.func is not None and pygame.mouse.get_pressed()[0]:
                         box.returned = box.func()
 
 
@@ -325,11 +333,8 @@ class Input:
                 if pressed == pygame.K_BACKSPACE:
                     inputString = inputString[0:-1]
                 # Ugly as all hell, but oh well
-                elif pressed == pygame.K_RETURN or pressed == pygame.K_KP_ENTER:
+                elif pressed == pygame.K_RETURN or pressed == pygame.K_KP_ENTER or pressed == pygame.K_ESCAPE:
                     self.running = False
-                elif pressed == pygame.K_ESCAPE:
-                    self.running = False
-                    inputString = None
                 elif 31 < pressed < 127:  # Letters, numbers, and special characters
                     inputString += chr(pressed)
                 elif 255 < pressed < 266:  # Numpad numbers
@@ -368,8 +373,6 @@ class Input:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self.running = False
                 return
-            else:
-                pass
 
     def __text(self, string):
         txt = self.font.render(self.text + str(string), True, BLACK)
