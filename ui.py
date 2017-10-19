@@ -32,8 +32,10 @@ class Error:
         if len(self.text) > self.maxChars:
             Error(self.text[self.maxChars::], self.duration)
             self.text = self.text[:self.maxChars]
+            self.manager.append(self)
 
-        self.manager.insert(0, self)  # Puts the newest message at the bottom
+        else:
+            self.manager.insert(0, self)  # Puts the newest message at the bottom
 
     def update(self):
         # We remove at the end
@@ -96,8 +98,7 @@ class Button:
                     pygame.draw.rect(self.window, ele.hover, ele.rect)
 
                     if pygame.mouse.get_pressed()[0] and ele.clicked is False:  # First time clicking
-                        ele.returned = ele.func()
-                        ele.clicked = True
+                        ele.run()
 
                     ele.hovering = True
 
@@ -118,6 +119,10 @@ class Button:
         txt = self.font.render(self.string, True, self.stringColor)
         text_rect = txt.get_rect(center=(self.rect[0] + self.rect[2]/2, self.rect[1] + self.rect[3]/2))
         self.window.blit(txt, text_rect)
+
+    def run(self):
+        self.returned = self.func()
+        self.clicked = True
 
     def hide(self):
         self.hidden = True
@@ -227,8 +232,10 @@ class Display:
         self.oColor = oColor
 
         if image is not None:
-            if image not in self.texture.custom:
-                self.texture.addCustom(image, rect[2], rect[3])
+            if group not in self.texture.custom:
+                self.texture.custom[group] = {}
+            if image not in self.texture.custom[group]:
+                self.texture.addCustom(group, image, rect[2], rect[3])
 
         # If a group exists, append it, else create it
         if group in self.manager:
@@ -246,7 +253,7 @@ class Display:
                 pygame.draw.rect(self.window, box.oColor, box.rect, box.outline)  # Outline
                 pygame.draw.rect(self.window, box.color, box.rect)
                 if box.image is not None:
-                    self.window.blit(self.texture.callCustom(box.image), (box.rect[0], box.rect[1]))
+                    self.window.blit(self.texture.callCustom(box.group, box.image), (box.rect[0], box.rect[1]))
                 if box.text is not None:
                     box.__text()
                 if box.rect.collidepoint(mouse):
@@ -407,14 +414,15 @@ class Scroll:
         self.margin = margin
 
         displace = 0
-        for ui in elements:
-            for thing in ui:
-                thing.rect.y = self.rect.y + displace + margin
-                thing.rect.x += self.rect.x + margin
-                thing.group = self.group
-                thing.hide()
-            displace += thing.rect.height
-            self.elements.append(ui)
+        # We're dealing with a list of lists
+        for line in elements:
+            for obj in line:
+                obj.rect.y = self.rect.y + displace + margin
+                obj.rect.x += self.rect.x + margin
+                obj.group = self.group
+                obj.hide()
+            displace += obj.rect.height
+            self.elements.append(line)
 
         self.manager[self.group] = self
 
@@ -423,12 +431,12 @@ class Scroll:
         pygame.draw.rect(self.window, WHITE, current.rect)
         pygame.draw.rect(self.window, BLACK, current.rect, 2)
 
-        for ui in current.elements:
-            for thing in ui:
-                if current.rect.y <= thing.rect.y < current.rect.y + current.rect.height - thing.rect.height:
-                    thing.show()
+        for line in current.elements:
+            for obj in line:
+                if current.rect.y <= obj.rect.y < current.rect.y + current.rect.height - obj.rect.height:
+                    obj.show()
                 else:
-                    thing.hide()
+                    obj.hide()
 
     def events(self, event, group, mouse):
         if self.manager[group].rect.collidepoint(mouse):
