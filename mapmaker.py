@@ -17,8 +17,7 @@ class Maker:
         self.sCurrent = 0
         self.secondaryTexture = BLACK
         self.selection = None
-        self.latestSearch = ""
-        self.latestPage = 0
+        self.page = 0
         self.thumbnailSize = 32
         self.currentLayer = 0
         self.map = Map([15, 12], "first")
@@ -138,10 +137,6 @@ class Maker:
                 a -= 1
         self.resetDisplay()
         return a
-
-    def showGrid(self):
-        for ele in Map.m.grid.all():
-            ele[2].drawOutline = not ele[2].drawOutline
 
     def move(self):
         if not self.mouseMove:
