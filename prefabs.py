@@ -61,7 +61,10 @@ class Prefab:
         if submit():
             if thumbnailSize.intCall() is not None:
                 self.parent.thumbnailSize = thumbnailSize.intCall()
-                self.texture.rescaleCustom(thumbnailSize.intCall())
+                try:
+                    self.texture.rescaleCustom("Thumbnails", thumbnailSize.intCall())
+                except KeyError:
+                    Error("Initialized thumbnails", color=GREEN)
             if mapName() is not "":
                 oldName = Map.m.name
                 Map.m.name = mapName()
@@ -81,38 +84,30 @@ class Prefab:
         if yes(): self.parent.quit()
 
     def o_textureSelect(self):
-        group = "Textures"
+        group = "Thumbnails"
         w, h, m = WINDOW[0]-20, WINDOW[1]-100, 10
         x, y = m, WINDOW[1] / 2 - h / 2
         size = self.parent.thumbnailSize
-        page = self.parent.latestPage
         overlay = Overlay((x, y, w, h), group)
-        search = Input((x + m, y+40, w - 2 * m-80, 32), "Search textures: ", group)
-        search.changeText(self.parent.latestSearch)
+        bList = []
 
-        thumbnails = Button((x + m + w - 2 * m - 80, y+40, 80, 32),
-                            partial(self.o_textureLoad, w, h, m, x, y, size, search, group, overlay, page),
-                            "Search", group)
+        for i in range(len(Texture.data)):
+            bList.append(Button((x + m + i*32, y + h - 42, 32, 32),
+                   partial(self.o_textureLoad, w, h, m, x, y, size, group, overlay, i),
+                   str(i+1), group))
 
-        for i in range(36):
-            Button((x + m + i*32, y + h - 42, 32, 32),
-                   partial(self.o_textureLoad, w, h, m, x, y, size, "", group, overlay, i),
-                   str(i+1), group)
-
-        thumbnails.returned = self.o_textureLoad(w, h, m, x, y, size, search, group, overlay, page)
-
+        bList[self.parent.page].run()
         overlay.loop()
 
-        if thumbnails() is not None:
-            for line in thumbnails():
+        if bList[self.parent.page]() is not None:
+            for line in bList[self.parent.page]():
                 for img in line:
                     if img():
                         self.parent.sList[self.parent.sCurrent] = img.image
 
-        self.parent.latestSearch = search()
         self.parent.resetDisplay()
 
-    def o_textureLoad(self, w, h, m, x, y, size, search, group, overlay, page):
+    def o_textureLoad(self, w, h, m, x, y, size, group, overlay, page):
         self.parent.displayBox.killall(group)
         line = []
         column = []
@@ -130,8 +125,8 @@ class Prefab:
                 p += 1
             column.append(line)
             line = []
-        self.parent.latestPage = page
-        Scroll((x + m, y + 80, w - 2 * m, h-140), column, group, movespeed=size)
+        self.parent.page = page
+        Scroll((x + m, y + 40, w - 2 * m, h-100), column, group, movespeed=size)
         return column
 
     def o_loadmap(self):
