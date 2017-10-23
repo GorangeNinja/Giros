@@ -1,7 +1,7 @@
 import pygame
 import math
 import textures
-from ui import Error
+from ui import Message
 from maps import *
 from settings import *
 

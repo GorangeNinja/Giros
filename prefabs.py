@@ -40,7 +40,7 @@ class Prefab:
                 self.parent.tile.rescale()
                 self.parent.resetDisplay()
             else:
-                Error("Expected integer width/height")
+                Message("Expected integer width/height")
 
     def o_settings(self):
         group = "Settings"
@@ -64,7 +64,7 @@ class Prefab:
                 try:
                     self.texture.rescaleCustom("Thumbnails", thumbnailSize.intCall())
                 except KeyError:
-                    Error("Initialized thumbnails", color=GREEN)
+                    Message("Initialized thumbnails", color=GREEN)
             if mapName() is not "":
                 oldName = Map.m.name
                 Map.m.name = mapName()

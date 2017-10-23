@@ -12,6 +12,7 @@ class Maker:
     def __init__(self):
         pygame.init()
         self.window = pygame.display.set_mode(WINDOW)
+        self.clock = pygame.time.Clock()
         self.group = "maker"
         self.sList = ["error_alpha.png", "error_alpha.png", "error_alpha.png", "error_alpha.png", "error_alpha.png"]
         self.sCurrent = 0
@@ -24,7 +25,7 @@ class Maker:
 
         self.tile = Tile(None)
         self.tile.texture.bulk()
-        self.error = Error("", 0)
+        self.message = Message("", 0)
         self.prefab = Prefab(self)
         self.inputBox = Input((0, 0, 0, 0), "", self.group)
         self.displayBox = Display((0, 0, 0, 0), self.group)
@@ -51,10 +52,11 @@ class Maker:
             self.button.update(self.group, self.mouse)
             self.displayBox.update(self.group, self.mouse)
             self.inputBox.update(self.group, self.mouse)
-            self.error.update()
+            self.message.update()
 
             self.events()
 
+            pygame.display.set_caption(str(self.clock.get_fps()))
             pygame.display.update()
 
     def events(self):
@@ -125,7 +127,7 @@ class Maker:
                                 self.tile.rescale()
 
         except AttributeError:
-            Error("Cursor outside of grid", duration=1)
+            Message("Cursor outside of grid", duration=1)
 
     def check(self, a, b, c):
         # Keeps a within 0 and len(b), when you add/subtract

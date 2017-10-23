@@ -2,6 +2,7 @@ import pygame
 import os
 from settings import *
 from maps import *
+import time
 
 
 class Texture:
@@ -18,12 +19,16 @@ class Texture:
     custom = {}  # Images scaled to custom size, useful for thumbnails
     data = {}  # Keeps track of all spritesheets tile width and height
 
+    tick = time.time()
+    animationSpeed = 10
+
     def __call__(self, filename):
-        try:
-            return self.scaled[filename]
-        except:
-            # Name not in dictionary
-            return self.scaled["error_alpha.png"]
+        self.fps = int(time.time() * self.animationSpeed - self.tick * self.animationSpeed)
+
+        temp = filename.split("-")
+        if temp[0] == "a":
+            return self.scaled[temp[0]+"-"+temp[1]+"-"+str(self.fps%(self.data[temp[0]+"-"+temp[1]][0]))]
+        return self.scaled[filename]
 
     def bulk(self):
         # Loads everything in the textures folder
@@ -33,24 +38,10 @@ class Texture:
     def load(self, filename):
         if self.supportedFormats in filename:
             # Sheet format <name_tilesize_sheet.png>
-            if "_sheet" in filename:
-                if "_alpha" in filename:
-                    img = pygame.image.load(self.path + filename).convert_alpha()
-                else:
-                    img = pygame.image.load(self.path + filename).convert()
+            if "_sheet" in filename: self.loadSheet("s-", filename)
 
-                name, sx, sy, useless = filename.split("_")
-                sx, sy = int(sx), int(sy)
-                w, h = img.get_rect()[2]//sx, img.get_rect()[3]//sy
-
-                i = 0
-                for y in range(h):
-                    for x in range(w):
-                        image = img.subsurface((pygame.Rect(x*sx, y*sy, sx, sy)))
-                        self.__add(image, "s-"+name+"-"+str(i))
-                        i += 1
-
-                self.data["s-"+name] = [w, h, sx, sy]
+            # Animation format <name_tilesize_anim.png>
+            if "_anim" in filename: self.loadSheet("a-", filename)
 
             # Transparent image format <name_alpha.png>
             elif "_alpha" in filename:
@@ -61,7 +52,21 @@ class Texture:
                 img = pygame.image.load(self.path + filename).convert()
                 self.__add(img, filename)
 
+    def loadSheet(self, form, filename):
+        img = pygame.image.load(self.path + filename).convert_alpha()
 
+        name, sx, sy, useless = filename.split("_")
+        sx, sy = int(sx), int(sy)
+        w, h = img.get_rect()[2] // sx, img.get_rect()[3] // sy
+
+        i = 0
+        for y in range(h):
+            for x in range(w):
+                image = img.subsurface((pygame.Rect(x * sx, y * sy, sx, sy)))
+                self.__add(image, form + name + "-" + str(i))
+                i += 1
+
+        self.data[form + name] = [w, h, sx, sy]
 
     def __add(self, img, filename):
         self.native[filename] = img

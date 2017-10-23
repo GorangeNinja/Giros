@@ -4,7 +4,7 @@ from textures import Texture
 import time
 
 
-class Error:
+class Message:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     font = pygame.font.SysFont(FONT, 28)
@@ -12,14 +12,14 @@ class Error:
     maxChars = 30  # This should be tied with width
     x, y = 0, WINDOW[1]-62
     w, h = 400, 32
-    distance = 32  # How much each new error message moves upwards
+    distance = 32  # How much each new message moves upwards
     textMargin = 10  # Left margin for text
 
     # This is for the transparent background
     background = pygame.Surface((w, h), pygame.SRCALPHA, 32)
     background.fill(T_BLACK)  # format: (r, g, b, a)
 
-    manager = []  # Keeps track of all error messages
+    manager = []  # Keeps track of all messages
 
     def __init__(self, text, duration=4, color=RED, limiter=True):
         self.text = str(text)
@@ -28,9 +28,9 @@ class Error:
         self.color = color
         self.limiter = limiter  # TODO If the message already exists do not make it
 
-        # If the char length is too long, create a new error message with the rest
+        # If the char length is too long, create a new message with the rest
         if len(self.text) > self.maxChars:
-            Error(self.text[self.maxChars::], self.duration)
+            Message(self.text[self.maxChars::], self.duration)
             self.text = self.text[:self.maxChars]
             self.manager.append(self)
 
@@ -62,8 +62,9 @@ class Button:
     manager = {}  # Keeps track of all the buttons, required for drawing, and updating them
     hovered = False
 
-    def __init__(self, rect, func, string, group, color=LIGHTERGREY, hover=LIGHTGREY,
-                stringColor=BLACK, outline=3, outline_color=BLACK, click=GREY, hidden=False):
+    def __init__(self, rect, func, string, group,
+                 color=LIGHTERGREY, hover=LIGHTGREY, stringColor=BLACK,
+                 outline=3, outline_color=BLACK, click=GREY, hidden=False):
         self.rect = pygame.Rect(rect)
         self.color = color  # Default color
         self.hover = hover  # Mouse hover color
@@ -148,7 +149,7 @@ class Overlay:
     def __init__(self, rect, group, exitButton=40):
         self.rect = pygame.Rect(rect)
         self.group = group
-        self.error = Error("", 0)
+        self.message = Message("", 0)
 
         self.exitButton = exitButton  # Either 40 or False
         if not exitButton:
@@ -177,7 +178,7 @@ class Overlay:
             self.button.update(self.group, self.mouse)
             self.displayBox.update(self.group, self.mouse)
             self.inputBox.update(self.group, self.mouse)
-            self.error.update()
+            self.message.update()
 
             self.events()
 
@@ -211,7 +212,7 @@ class Display:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     font = pygame.font.SysFont(FONT, 28)
-    error = Error("", 0)
+    message = Message("", 0)
     manager = {}
     texture = Texture()
     hovered = False
@@ -288,7 +289,7 @@ class Input:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     font = pygame.font.SysFont(FONT, 28)
-    error = Error("", 0)
+    message = Message("", 0)
     manager = {}
 
     def __init__(self, rect, text, group, onetime=False, outline=3, keep=False):
@@ -332,7 +333,7 @@ class Input:
             pygame.draw.rect(self.window, BLACK, self.rect, self.outline)  # Outline
             pygame.draw.rect(self.window, GREY, self.rect)
             self.__text(inputString)
-            self.error.update()
+            self.message.update()
             pygame.display.update()
 
             pressed = self.__get_key()
