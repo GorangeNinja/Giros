@@ -131,9 +131,6 @@ class Button:
     def show(self):
         self.hidden = False
 
-    def toggle(self):
-        self.hidden = not self.hidden
-
     def kill(self):
         self.manager[self.group].remove(self)
 
