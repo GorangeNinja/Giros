@@ -69,8 +69,12 @@ class Texture:
         self.data[form + name] = [w, h, sx, sy]
 
     def __add(self, img, filename):
-        self.native[filename] = img
-        self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
+        try:
+            self.native[filename].append(img)
+            self.scaled[filename].append(pygame.transform.scale(img, Map.m.tileSize))
+        except KeyError:
+            self.native[filename] = img
+            self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
 
     def addCustom(self, group, filename, w, h):
         # Rescales an already existing image
