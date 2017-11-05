@@ -25,9 +25,9 @@ class Texture:
     def __call__(self, filename):
         self.fps = int(time.time() * self.animationSpeed - self.tick * self.animationSpeed)
 
-        temp = filename.split("-")
+        temp = filename.split("_")
         if temp[0] == "a":
-            return self.scaled[temp[0]+"-"+temp[1]+"-"+str(self.fps%(self.data[temp[0]+"-"+temp[1]][0]))]
+            return self.scaled[temp[0]+"_"+temp[1]+"_"+str(self.fps%(self.data[temp[0]+"_"+temp[1]][0]))]
         return self.scaled[filename]
 
     def bulk(self):
@@ -38,10 +38,10 @@ class Texture:
     def load(self, filename):
         if self.supportedFormats in filename:
             # Sheet format <name_tilesize_sheet.png>
-            if "_sheet" in filename: self.loadSheet("s-", filename)
+            if "_sheet" in filename: self.loadSheet("s_", filename)
 
             # Animation format <name_tilesize_anim.png>
-            if "_anim" in filename: self.loadSheet("a-", filename)
+            if "_anim" in filename: self.loadSheet("a_", filename)
 
             # Transparent image format <name_alpha.png>
             elif "_alpha" in filename:
@@ -63,7 +63,7 @@ class Texture:
         for y in range(h):
             for x in range(w):
                 image = img.subsurface((pygame.Rect(x * sx, y * sy, sx, sy)))
-                self.__add(image, form + name + "-" + str(i))
+                self.__add(image, form + name + "_" + str(i))
                 i += 1
 
         self.data[form + name] = [w, h, sx, sy]
@@ -75,6 +75,9 @@ class Texture:
         except KeyError:
             self.native[filename] = img
             self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
+
+    def __getInfo(self, filename):
+        return filename.split("_")
 
     def addCustom(self, group, filename, w, h):
         # Rescales an already existing image
