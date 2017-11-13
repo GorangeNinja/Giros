@@ -121,7 +121,7 @@ class Prefab:
         for j in range(th):
             for i in range(tw):
                 line.append(Display((i*size, 0, size, size), group,
-                                    image=name+"-"+str(p), func=overlay.quit))
+                                    image=name+"_"+str(p), func=overlay.quit))
                 p += 1
             column.append(line)
             line = []

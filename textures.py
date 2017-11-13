@@ -55,7 +55,7 @@ class Texture:
     def loadSheet(self, form, filename):
         img = pygame.image.load(self.path + filename).convert_alpha()
 
-        name, sx, sy, useless = filename.split("_")
+        name, sx, sy, useless = self.__getInfo(filename)
         sx, sy = int(sx), int(sy)
         w, h = img.get_rect()[2] // sx, img.get_rect()[3] // sy
 
