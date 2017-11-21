@@ -26,7 +26,6 @@ class Message:
         self.duration = duration  # Duration in seconds
         self.initialTime = time.time()
         self.color = color
-        self.limiter = limiter  # TODO If the message already exists do not make it
 
         # If the char length is too long, create a new message with the rest
         if len(self.text) > self.maxChars:
@@ -229,12 +228,6 @@ class Display:
         self.outline = outline
         self.oColor = oColor
 
-        if image is not None:
-            if group not in self.texture.custom:
-                self.texture.custom[group] = {}
-            if image not in self.texture.custom[group]:
-                self.texture.addCustom(group, image, rect[2], rect[3])
-
         # If a group exists, append it, else create it
         if group in self.manager:
             self.manager[group].append(self)
@@ -251,7 +244,7 @@ class Display:
                 pygame.draw.rect(self.window, box.oColor, box.rect, box.outline)  # Outline
                 pygame.draw.rect(self.window, box.color, box.rect)
                 if box.image is not None:
-                    self.window.blit(self.texture.callCustom(box.group, box.image), (box.rect[0], box.rect[1]))
+                    self.window.blit(self.texture(box.image, (box.rect[2], box.rect[3])), (box.rect[0], box.rect[1]))
                 if box.text is not None:
                     box.__text()
                 if box.rect.collidepoint(mouse):

@@ -15,24 +15,26 @@ class Texture:
     path += "/"
 
     native = {}  # Keeps a copy of all the unscaled images
-    scaled = {}  # Images scaled to Map.m.tileSize
-    custom = {}  # Images scaled to custom size, useful for thumbnails
-    data = {}  # Keeps track of all spritesheets tile width and height
+    scaled = {}  # Keeps track of all the scaled images, so it only loads them once
+    data = {}  # Keeps track of all spritesheets tile width and height and animations fps
 
     tick = time.time()
     animationSpeed = 10
 
-    def __call__(self, filename):
-        self.fps = int(time.time() * self.animationSpeed - self.tick * self.animationSpeed)
+    def __call__(self, data):
+        # data format -> {name, position, resolution, fps}
+        #self.fps = int(time.time() * self.animationSpeed - self.tick * self.animationSpeed)
+        if str(data["resolution"]) not in self.scaled:
+            self.scaled[str(data["resolution"])] = {}
 
-        temp = filename.split("_")
-        if temp[0] == "a":
-            return self.scaled[temp[0]+"_"+temp[1]+"_"+str(self.fps%(self.data[temp[0]+"_"+temp[1]][0]))]
-        return self.scaled[filename]
+        if data["name"] not in self.scaled[str(data["resolution"])]:
+            self.__addScaled(data["name"], data["resolution"], int(data[position))
 
-    def bulk(self):
+        return self.scaled[str(resolution)][name][int(position)]
+
+    def bulk(self, folder=""):
         # Loads everything in the textures folder
-        for filename in os.listdir(self.path):
+        for filename in os.listdir(self.path+folder):
             self.load(filename)
 
     def load(self, filename):
@@ -46,11 +48,11 @@ class Texture:
             # Transparent image format <name_alpha.png>
             elif "_alpha" in filename:
                 img = pygame.image.load(self.path + filename).convert_alpha()
-                self.__add(img, filename)
+                self.__addNative(img, filename)
 
             else:
                 img = pygame.image.load(self.path + filename).convert()
-                self.__add(img, filename)
+                self.__addNative(img, filename)
 
     def loadSheet(self, form, filename):
         img = pygame.image.load(self.path + filename).convert_alpha()
@@ -59,37 +61,27 @@ class Texture:
         sx, sy = int(sx), int(sy)
         w, h = img.get_rect()[2] // sx, img.get_rect()[3] // sy
 
-        i = 0
         for y in range(h):
             for x in range(w):
                 image = img.subsurface((pygame.Rect(x * sx, y * sy, sx, sy)))
-                self.__add(image, form + name + "_" + str(i))
-                i += 1
+                self.__addNative(image, form + name)
 
         self.data[form + name] = [w, h, sx, sy]
 
-    def __add(self, img, filename):
+    def __addNative(self, img, filename):
         try:
             self.native[filename].append(img)
-            self.scaled[filename].append(pygame.transform.scale(img, Map.m.tileSize))
+
         except KeyError:
-            self.native[filename] = img
-            self.scaled[filename] = pygame.transform.scale(img, Map.m.tileSize)
+            self.native[filename] = [img]
+
+    def __addScaled(self, filename, resolution, position):
+        try:
+            self.scaled[str(resolution)][filename].append(pygame.transform.scale(self.native[filename][position],
+                                                                                 resolution))
+
+        except KeyError:
+            self.scaled[str(resolution)][filename] = [pygame.transform.scale(self.native[filename], resolution)]
 
     def __getInfo(self, filename):
         return filename.split("_")
-
-    def addCustom(self, group, filename, w, h):
-        # Rescales an already existing image
-        self.custom[group][filename] = pygame.transform.scale(self.native[filename], (w, h))
-
-    def callCustom(self, group, filename):
-        return self.custom[group][filename]
-
-    def rescale(self):
-        for name in self.native:
-            self.scaled[name] = pygame.transform.scale(self.native[name], Map.m.tileSize)
-
-    def rescaleCustom(self, group, size):
-        for name in self.custom[group]:
-            self.custom[group][name] = pygame.transform.scale(self.native[name], (size, size))

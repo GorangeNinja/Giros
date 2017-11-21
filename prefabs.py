@@ -61,10 +61,6 @@ class Prefab:
         if submit():
             if thumbnailSize.intCall() is not None:
                 self.parent.thumbnailSize = thumbnailSize.intCall()
-                try:
-                    self.texture.rescaleCustom("Thumbnails", thumbnailSize.intCall())
-                except KeyError:
-                    Message("Initialized thumbnails", color=GREEN)
             if mapName() is not "":
                 oldName = Map.m.name
                 Map.m.name = mapName()
@@ -121,7 +117,7 @@ class Prefab:
         for j in range(th):
             for i in range(tw):
                 line.append(Display((i*size, 0, size, size), group,
-                                    image=name+"_"+str(p), func=overlay.quit))
+                                    image=name+"-"+str(p), func=overlay.quit))
                 p += 1
             column.append(line)
             line = []
