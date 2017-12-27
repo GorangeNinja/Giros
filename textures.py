@@ -21,18 +21,17 @@ class Texture:
     tick = time.time()
     animationSpeed = 10
 
-    def __call__(self, data):
-        # data format -> {name, position, resolution, fps}
+    def __call__(self, name, position, resolution):
         #self.fps = int(time.time() * self.animationSpeed - self.tick * self.animationSpeed)
-        if str(data["resolution"]) not in self.scaled:
-            self.scaled[str(data["resolution"])] = {}
+        if str(resolution) not in self.scaled:
+            self.scaled[str(resolution)] = {}
 
-        if data["name"] not in self.scaled[str(data["resolution"])]:
-            self.__addScaled(data["name"], data["resolution"], int(data[position))
+        if name not in self.scaled[str(resolution)]:
+            self.__addScaled(name, resolution, position)
 
-        return self.scaled[str(resolution)][name][int(position)]
+        return self.scaled[str(resolution)][name][position]
 
-    def bulk(self, folder=""):
+    def bulk(self, folder="images"):
         # Loads everything in the textures folder
         for filename in os.listdir(self.path+folder):
             self.load(filename)
@@ -76,12 +75,20 @@ class Texture:
             self.native[filename] = [img]
 
     def __addScaled(self, filename, resolution, position):
-        try:
-            self.scaled[str(resolution)][filename].append(pygame.transform.scale(self.native[filename][position],
-                                                                                 resolution))
+        if filename in COLORS:
+            try:
+                self.scaled[str(resolution)][filename].append(pygame.Surface(resolution, COLORS[filename]))
 
-        except KeyError:
-            self.scaled[str(resolution)][filename] = [pygame.transform.scale(self.native[filename], resolution)]
+            except:
+                self.scaled[str(resolution)][filename] = [pygame.Surface(resolution, COLORS[filename])]
+
+        else:
+            try:
+                self.scaled[str(resolution)][filename].append(pygame.transform.scale(self.native[filename][position],
+                                                                                     resolution))
+
+            except KeyError:
+                self.scaled[str(resolution)][filename] = [pygame.transform.scale(self.native[filename], resolution)]
 
     def __getInfo(self, filename):
         return filename.split("_")

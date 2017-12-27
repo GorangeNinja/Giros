@@ -4,15 +4,6 @@ from textures import Texture
 import time
 
 
-def update_all(group, mouse):
-    Message.update()
-    Scroll.update(group)
-    Button.update(group, mouse)
-    Display.update(group, mouse)
-    Input.update(group, mouse)
-    Slider.update(group, mouse)
-
-
 class Message:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
@@ -45,19 +36,18 @@ class Message:
         else:
             self.manager.insert(0, self)  # Puts the newest message at the bottom
 
-    @staticmethod
-    def update():
+    def update(self):
         # We remove at the end
         remove = None
-        for i, ele in enumerate(Message.manager):
+        for i, ele in enumerate(self.manager):
             if time.time() - ele.initialTime > ele.duration:
                 remove = ele
 
-            Message.window.blit(Message.background, (Message.x, Message.y-(Message.distance*i)))
+            self.window.blit(self.background, (self.x, self.y-(self.distance*i)))
             ele.__text(i)
 
         if remove is not None:
-            Message.manager.remove(remove)
+            self.manager.remove(remove)
 
     def __text(self, i):
         txt = self.font.render(self.text, True, self.color)
@@ -97,35 +87,33 @@ class Button:
     def __call__(self):
         return self.returned
 
-    @staticmethod
-    def update(group, mouse):
-        if group in Button.manager:
-            Button.hovered = False
-            for ele in Button.manager[group]:
-                if not ele.hidden:
-                    pygame.draw.rect(Button.window, ele.outline_color, ele.rect, ele.outline)  # Draws outline
+    def update(self, group, mouse):
+        Button.hovered = False
+        for ele in self.manager[group]:
+            if not ele.hidden:
+                pygame.draw.rect(self.window, ele.outline_color, ele.rect, ele.outline)  # Draws outline
 
-                    if ele.rect.collidepoint(mouse):  # Mouse is hovering over a button
-                        Button.hovered = True
-                        pygame.draw.rect(Button.window, ele.hover, ele.rect)
+                if ele.rect.collidepoint(mouse):  # Mouse is hovering over a button
+                    Button.hovered = True
+                    pygame.draw.rect(self.window, ele.hover, ele.rect)
 
-                        if pygame.mouse.get_pressed()[0] and ele.clicked is False:  # First time clicking
-                            ele.run()
+                    if pygame.mouse.get_pressed()[0] and ele.clicked is False:  # First time clicking
+                        ele.run()
 
-                        ele.hovering = True
+                    ele.hovering = True
 
-                    else:  # If the mouse isn't hovering over anything
-                        pygame.draw.rect(Button.window, ele.color, ele.rect)
-                        ele.hovering = False
-                        ele.clicked = False
+                else:  # If the mouse isn't hovering over anything
+                    pygame.draw.rect(self.window, ele.color, ele.rect)
+                    ele.hovering = False
+                    ele.clicked = False
 
-                    if ele.clicked is True:  # The button is being clicked
-                        pygame.draw.rect(Button.window, ele.click, ele.rect)
+                if ele.clicked is True:  # The button is being clicked
+                    pygame.draw.rect(self.window, ele.click, ele.rect)
 
-                    if not pygame.mouse.get_pressed()[0]:
-                        ele.clicked = False
+                if not pygame.mouse.get_pressed()[0]:
+                    ele.clicked = False
 
-                    ele.__text()
+                ele.__text()
 
     def __text(self):
         txt = self.font.render(self.string, True, self.stringColor)
@@ -145,9 +133,8 @@ class Button:
     def kill(self):
         self.manager[self.group].remove(self)
 
-    @staticmethod
-    def killall(group):
-        Button.manager[group] = []
+    def killall(self, group):
+        self.manager[group] = []
 
 
 class Overlay:
@@ -167,6 +154,9 @@ class Overlay:
             self.button = Button((self.rect[0] + self.rect[2] - 40, self.rect[1], exitButton, 30), self.quit, "X",
                                  self.group)
 
+        self.inputBox = Input((0, 0, 0, 0), "", self.group)
+        self.displayBox = Display((0, 0, 0, 0), self.group)
+        self.scroll = Scroll((0, 0, 0, 0), [], self.group)
         self.mouse = pygame.mouse.get_pos()
         self.pressed = pygame.key.get_pressed()
 
@@ -180,11 +170,11 @@ class Overlay:
             self.text(self.group, pygame.Rect(self.rect[0], self.rect[1]+5, self.rect[2]-self.exitButton, 30))
 
             # Draws all buttons
-            Scroll.update(self.group)
-            Button.update(self.group, self.mouse)
-            Display.update(self.group, self.mouse)
-            Input.update(self.group, self.mouse)
-            Message.update()
+            self.scroll.update(self.group)
+            self.button.update(self.group, self.mouse)
+            self.displayBox.update(self.group, self.mouse)
+            self.inputBox.update(self.group, self.mouse)
+            self.message.update()
 
             self.events()
 
@@ -199,7 +189,7 @@ class Overlay:
                     self.quit()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.quit()
-            Scroll.events(event, self.group, self.mouse)
+            self.scroll.events(event, self.group, self.mouse)
 
     def text(self, string, rect):
         txt = self.font.render(string, True, BLACK)
@@ -208,9 +198,9 @@ class Overlay:
 
     def quit(self):
         self.running = False
-        Button.killall(self.group)
-        Display.killall(self.group)
-        Input.killall(self.group)
+        self.button.killall(self.group)
+        self.displayBox.killall(self.group)
+        self.inputBox.killall(self.group)
         return True
 
 
@@ -247,22 +237,21 @@ class Display:
     def __call__(self):
         return self.returned
 
-    @staticmethod
-    def update(group, mouse):
-        if group in Display.manager:
-            Display.hovered = False
-            for box in Display.manager[group]:
-                if not box.hidden:
-                    pygame.draw.rect(Display.window, box.oColor, box.rect, box.outline)  # Outline
-                    pygame.draw.rect(Display.window, box.color, box.rect)
-                    if box.image is not None:
-                        Display.window.blit(Display.texture(box.image, (box.rect[2], box.rect[3])), (box.rect[0], box.rect[1]))
-                    if box.text is not None:
-                        box.__text()
-                    if box.rect.collidepoint(mouse):
-                        Display.hovered = True
-                        if box.func is not None and pygame.mouse.get_pressed()[0]:
-                            box.returned = box.func()
+    def update(self, group, mouse):
+        Display.hovered = False
+        for box in self.manager[group]:
+            if not box.hidden:
+                pygame.draw.rect(self.window, box.oColor, box.rect, box.outline)  # Outline
+                pygame.draw.rect(self.window, box.color, box.rect)
+                if box.image is not None:
+                    self.window.blit(self.texture(box.image, (box.rect[2], box.rect[3])), (box.rect[0], box.rect[1]))
+                if box.text is not None:
+                    box.__text()
+                if box.rect.collidepoint(mouse):
+                    Display.hovered = True
+                    if box.func is not None and pygame.mouse.get_pressed()[0]:
+                        box.returned = box.func()
+
 
     def __text(self):
         if self.align == "m":
@@ -282,9 +271,8 @@ class Display:
     def kill(self):
         self.manager[self.group].remove(self)
 
-    @staticmethod
-    def killall(group):
-        Display.manager[group] = []
+    def killall(self, group):
+        self.manager[group] = []
 
 
 class Input:
@@ -358,23 +346,21 @@ class Input:
         self.inputString = inputString
         return self.inputString
 
-    @staticmethod
-    def update(group, mouse):
-        if group in Input.manager:
-            clicked = None  # So it draws them all before going into the one you clicked on
-            for box in Input.manager[group]:
-                if not box.hidden:
-                    pygame.draw.rect(Input.window, BLACK, box.rect, box.outline)  # Outline
-                    pygame.draw.rect(Input.window, LIGHTERGREY, box.rect)
-                    box.__text(box.inputString)
+    def update(self, group, mouse):
+        clicked = None  # So it draws them all before going into the one you clicked on
+        for box in self.manager[group]:
+            if not box.hidden:
+                pygame.draw.rect(self.window, BLACK, box.rect, box.outline)  # Outline
+                pygame.draw.rect(self.window, LIGHTERGREY, box.rect)
+                box.__text(box.inputString)
 
-                    if mouse is not None:
-                        if box.rect.collidepoint(mouse):
-                            if pygame.mouse.get_pressed()[0]:
-                                clicked = box
+                if mouse is not None:
+                    if box.rect.collidepoint(mouse):
+                        if pygame.mouse.get_pressed()[0]:
+                            clicked = box
 
-            if clicked is not None:
-                clicked.run()
+        if clicked is not None:
+            clicked.run()
 
     def __get_key(self):
         # Infinite loop until a key/mouse is pressed
@@ -402,9 +388,8 @@ class Input:
     def kill(self):
         self.manager[self.group].remove(self)
 
-    @staticmethod
-    def killall(group):
-        Input.manager[group] = []
+    def killall(self, group):
+        self.manager[group] = []
 
 
 class Scroll:
@@ -432,79 +417,29 @@ class Scroll:
 
         self.manager[self.group] = self
 
-    @staticmethod
-    def update(group):
-        if group in Scroll.manager:
-            current = Scroll.manager[group]
-            pygame.draw.rect(Scroll.window, WHITE, current.rect)
-            pygame.draw.rect(Scroll.window, BLACK, current.rect, 2)
+    def update(self, group):
+        current = self.manager[group]
+        pygame.draw.rect(self.window, WHITE, current.rect)
+        pygame.draw.rect(self.window, BLACK, current.rect, 2)
 
-            for line in current.elements:
-                for obj in line:
-                    if current.rect.y <= obj.rect.y < current.rect.y + current.rect.height - obj.rect.height:
-                        obj.show()
-                    else:
-                        obj.hide()
+        for line in current.elements:
+            for obj in line:
+                if current.rect.y <= obj.rect.y < current.rect.y + current.rect.height - obj.rect.height:
+                    obj.show()
+                else:
+                    obj.hide()
 
-    @staticmethod
-    def events(event, group, mouse):
-        if Scroll.manager[group].rect.collidepoint(mouse):
+    def events(self, event, group, mouse):
+        if self.manager[group].rect.collidepoint(mouse):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 4:
-                    if Scroll.manager[group].elements[0][0].rect.y <= Scroll.manager[group].rect.y:
-                        Scroll.manager[group].move(Scroll.manager[group].movespeed)
+                    if self.manager[group].elements[0][0].rect.y <= self.manager[group].rect.y:
+                        self.manager[group].move(self.manager[group].movespeed)
                 elif event.button == 5:
-                    Scroll.manager[group].move(-Scroll.manager[group].movespeed)
+                    self.manager[group].move(-self.manager[group].movespeed)
 
     def move(self, amount):
         current = self.manager[self.group]
         for ui in current.elements:
             for thing in ui:
                 thing.rect.y += amount
-
-
-class Slider:
-    pygame.init()
-    window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
-    font = pygame.font.SysFont(FONT, 28)
-    manager = {}
-
-    def __init__(self, rect, elements, group, outline=3, pull_size=(15, 25), pull_outline=3,
-                 outline_color=BLACK, color=LIGHTERGREY, pull_color=LIGHTGREY, pull_outline_color=BLACK):
-        self.rect = pygame.Rect(rect)
-        self.elements = elements
-        self.group = group
-        self.x = 0
-
-        self.ratio = rect[3] // len(elements)
-        self.pull_size = pull_size
-        self.pull = pygame.Rect(rect[0]+10, rect[1]+(rect[3]//2 - pull_size[1]//2), pull_size[0], pull_size[1])
-
-        self.outline = outline
-        self.outline_color = outline_color
-        self.color = color
-        self.pull_color = pull_color
-        self.pull_outline = pull_outline
-        self.pull_outline_color = pull_outline_color
-
-        # If a group exists, append it, else create it
-        if group in self.manager:
-            self.manager[group].append(self)
-        else:
-            self.manager[group] = [self]
-
-    def __call__(self):
-        return self.elements[self.x]
-
-    @staticmethod
-    def update(group, mouse):
-        if group in Slider.manager:
-            for slide in Slider.manager[group]:
-                pygame.draw.rect(Slider.window, slide.outline_color, slide.rect, slide.outline)  # Outline
-                pygame.draw.rect(Slider.window, slide.color, slide.rect)
-                pygame.draw.line(Slider.window, BLACK, (slide.rect[0]+10, slide.rect[1]+slide.rect[3]/2),
-                                 (slide.rect[0]+slide.rect[2]-10, slide.rect[1]+slide.rect[3]/2), 1)
-                pygame.draw.rect(Slider.window, slide.pull_outline_color, slide.pull, slide.pull_outline)
-                pygame.draw.rect(Slider.window, slide.pull_color, slide.pull)
-
-

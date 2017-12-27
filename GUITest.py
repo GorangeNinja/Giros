@@ -1,12 +1,13 @@
 from ui import *
 import pygame
 from settings import *
+from textures import Texture
 
 
 class Tester:
     def __init__(self):
         pygame.init()
-        self.window = pygame.display.set_mode(WINDOW)
+        self.window = pygame.display.set_mode((400, 400))
         self.clock = pygame.time.Clock()
         self.group = "maker"
 
@@ -30,7 +31,7 @@ class Tester:
 
     def loop(self):
         while self.running:
-            self.window.fill(BROWN)
+            self.window.fill(COLORS["BROWN"])
 
             # Draws all buttons
             update_all(self.group, self.mouse)
