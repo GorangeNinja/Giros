@@ -64,6 +64,10 @@ class Message:
         self.window.blit(txt, pygame.Rect(self.x+self.textMargin, self.y-(self.distance*i), self.w, self.h))
 
 
+class Rect:
+    def __init__(self):
+
+
 class Button:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
@@ -72,18 +76,22 @@ class Button:
     hovered = False
 
     def __init__(self, rect, func, string, group,
-                 color="LIGHTERGREY", hover="LIGHTGREY", stringColor="BLACK",
-                 outline=3, outline_color="BLACK", click="GREY", hidden=False):
+                 color=["LIGHTERGREY"], hover=["LIGHTGREY"], stringColor="BLACK",
+                 outline=3, outline_color="BLACK", click=["GREY"], hidden=False):
         self.rect = pygame.Rect(rect)
-        self.color = color  # Default color
-        self.hover = hover  # Mouse hover color
+
+        # Colors
+        self.color = Texture((rect[2], rect[3]), *color)  # Default color
+        self.hover = Texture((rect[2], rect[3]), *hover)  # Mouse hover color
+        self.click = Texture((rect[2], rect[3]), *click)  # Click color
+        self.stringColor = COLORS[stringColor]  # Text color
+        self.outline_color = COLORS[outline_color]  # Duh
+
         self.func = func  # What func to run when clicked
         self.group = group
         self.string = str(string)  # Text in button
-        self.stringColor = stringColor  # Text color
         self.outline = outline  # Outline width
-        self.outline_color = COLORS[outline_color]  # Duh
-        self.click = click  # Click color
+
         self.hidden = hidden  # Bool
 
         self.returned = None  # What's returned when launching the function
@@ -101,32 +109,31 @@ class Button:
     def update(group, mouse):
         if group in Button.manager:
             Button.hovered = False
-            for ele in Button.manager[group]:
-                if not ele.hidden:
-                    pygame.draw.rect(Button.window, ele.outline_color, ele.rect, ele.outline)  # Draws outline
+            for but in Button.manager[group]:
+                if not but.hidden:
+                    pygame.draw.rect(Button.window, but.outline_color, but.rect, but.outline)  # Draws outline
 
-                    if ele.rect.collidepoint(mouse):  # Mouse is hovering over a button
+                    if but.rect.collidepoint(mouse):  # Mouse is hovering over a button
                         Button.hovered = True
-                        Button.window.blit(Texture(ele.hover, ))
-                        pygame.draw.rect(Button.window, ele.hover, ele.rect)
+                        Button.window.blit(but.hover(), but.rect)
 
-                        if pygame.mouse.get_pressed()[0] and ele.clicked is False:  # First time clicking
-                            ele.run()
+                        if pygame.mouse.get_pressed()[0] and but.clicked is False:  # First time clicking
+                            but.run()
 
-                        ele.hovering = True
+                        but.hovering = True
 
                     else:  # If the mouse isn't hovering over anything
-                        pygame.draw.rect(Button.window, ele.color, ele.rect)
-                        ele.hovering = False
-                        ele.clicked = False
+                        Button.window.blit(but.color(), but.rect)
+                        but.hovering = False
+                        but.clicked = False
 
-                    if ele.clicked is True:  # The button is being clicked
-                        pygame.draw.rect(Button.window, ele.click, ele.rect)
+                    if but.clicked is True:  # The button is being clicked
+                        Button.window.blit(but.click(), but.rect)
 
                     if not pygame.mouse.get_pressed()[0]:
-                        ele.clicked = False
+                        but.clicked = False
 
-                    ele.__text()
+                    but.__text()
 
     def __text(self):
         txt = self.font.render(self.string, True, self.stringColor)
@@ -156,10 +163,11 @@ class Overlay:
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     font = pygame.font.SysFont(FONT, 28)
 
-    def __init__(self, rect, group, exitButton=40):
+    def __init__(self, rect, group, color=["WHITE"], outline=2, exitButton=40):
         self.rect = pygame.Rect(rect)
         self.group = group
-        self.message = Message("", 0)
+        self.color = Texture((rect[2], rect[3]), *color)
+        self.outline = outline
 
         self.exitButton = exitButton  # Either 40 or False
         if not exitButton:
@@ -175,17 +183,13 @@ class Overlay:
         self.running = True
 
         while self.running:
-            pygame.draw.rect(self.window, "WHITE", self.rect)
-            pygame.draw.rect(self.window, "BLACK", self.rect, 2)
+            self.window.blit(self.color(), self.rect)
+            pygame.draw.rect(self.window, COLORS["BLACK"], self.rect, 2)
 
             self.text(self.group, pygame.Rect(self.rect[0], self.rect[1]+5, self.rect[2]-self.exitButton, 30))
 
-            # Draws all buttons
-            Scroll.update(self.group)
-            Button.update(self.group, self.mouse)
-            Display.update(self.group, self.mouse)
-            Input.update(self.group, self.mouse)
-            Message.update()
+            # Draws everything
+            update_all(self.group, self.mouse)
 
             self.events()
 
@@ -203,7 +207,7 @@ class Overlay:
             Scroll.events(event, self.group, self.mouse)
 
     def text(self, string, rect):
-        txt = self.font.render(string, True, "BLACK")
+        txt = self.font.render(string, True, COLORS["BLACK"])
         text_rect = txt.get_rect(center=(rect[0] + rect[2]/2, rect[1] + rect[3]/2))
         self.window.blit(txt, text_rect)
 
@@ -219,25 +223,22 @@ class Display:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     font = pygame.font.SysFont(FONT, 28)
-    message = Message("", 0)
     manager = {}
-    texture = Texture()
     hovered = False
 
-    def __init__(self, rect, group, text=None, image=None, func=None, align="l", outline=3,
-                 color="LIGHTERGREY", oColor="BLACK"):
+    def __init__(self, rect, group, text=None, func=None, align="l", outline=3,
+                 color=["LIGHTERGREY"], oColor="BLACK"):
         self.rect = pygame.Rect(rect)
         self.text = text
-        self.align = align # Can either align "l" for left, or "mid" for middle
-        self.image = image
+        self.align = align  # Can either align "l" for left, or "mid" for middle
         self.group = group
         self.func = func
         self.returned = None
         self.hidden = False
-        self.color = color
+        self.color = Texture((rect[2], rect[3]), *color)
 
         self.outline = outline
-        self.oColor = oColor
+        self.oColor = COLORS[oColor]
 
         # If a group exists, append it, else create it
         if group in self.manager:
@@ -255,9 +256,7 @@ class Display:
             for box in Display.manager[group]:
                 if not box.hidden:
                     pygame.draw.rect(Display.window, box.oColor, box.rect, box.outline)  # Outline
-                    pygame.draw.rect(Display.window, box.color, box.rect)
-                    if box.image is not None:
-                        Display.window.blit(Display.texture(box.image, (box.rect[2], box.rect[3])), (box.rect[0], box.rect[1]))
+                    Display.window.blit(box.color(), box.rect)
                     if box.text is not None:
                         box.__text()
                     if box.rect.collidepoint(mouse):
@@ -267,11 +266,11 @@ class Display:
 
     def __text(self):
         if self.align == "m":
-            txt = self.font.render(self.text, True, "BLACK")
+            txt = self.font.render(self.text, True, COLORS["BLACK"])
             text_rect = txt.get_rect(center=(self.rect[0] + self.rect[2] / 2, self.rect[1] + self.rect[3] / 2))
             self.window.blit(txt, text_rect)
         elif self.align == "l":
-            txt = self.font.render(self.text, True, "BLACK")
+            txt = self.font.render(self.text, True, COLORS["BLACK"])
             self.window.blit(txt, self.rect)
 
     def hide(self):
@@ -292,10 +291,9 @@ class Input:
     pygame.init()
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     font = pygame.font.SysFont(FONT, 28)
-    message = Message("", 0)
     manager = {}
 
-    def __init__(self, rect, text, group, onetime=False, outline=3, keep=False):
+    def __init__(self, rect, text, group, color=["LIGHTERGREY"], selected=["GREY"], onetime=False, outline=3, keep=False):
         self.rect = pygame.Rect(rect)
         self.text = text
         self.group = group
@@ -303,6 +301,8 @@ class Input:
         self.outline = outline
         self.keep = keep  # If True keeps string when you want to type
         self.hidden = False
+        self.color = Texture((rect[2], rect[3]), *color)
+        self.selected = Texture((rect[2], rect[3]), *selected)
 
         self.inputString = ""
 
@@ -334,7 +334,7 @@ class Input:
         while self.running:
             # We draw before input, cause when it's inside infinite wait loop we want everything drawn
             pygame.draw.rect(self.window, "BLACK", self.rect, self.outline)  # Outline
-            pygame.draw.rect(self.window, "GREY", self.rect)
+            self.window.blit(self.selected(), self.rect)
             self.__text(inputString)
             self.message.update()
             pygame.display.update()
@@ -365,8 +365,8 @@ class Input:
             clicked = None  # So it draws them all before going into the one you clicked on
             for box in Input.manager[group]:
                 if not box.hidden:
-                    pygame.draw.rect(Input.window, "BLACK", box.rect, box.outline)  # Outline
-                    pygame.draw.rect(Input.window, "LIGHTERGREY", box.rect)
+                    pygame.draw.rect(Input.window, COLORS["BLACK"], box.rect, box.outline)  # Outline
+                    Input.window.blit(box.color(), box.rect)
                     box.__text(box.inputString)
 
                     if mouse is not None:
@@ -413,12 +413,13 @@ class Scroll:
     window = pygame.display.set_mode((1, 1))  # This is suboptimal, but it works
     manager = {}
 
-    def __init__(self, rect, elements, group, movespeed=32, margin=10):
+    def __init__(self, rect, elements, group, color=["WHITE"], movespeed=32, margin=10):
         self.rect = pygame.Rect(rect)
         self.elements = []
         self.group = group
         self.movespeed = movespeed
         self.margin = margin
+        self.color = Texture((rect[2], rect[3]), *color)
 
         displace = 0
         # We're dealing with a list of lists
@@ -437,8 +438,8 @@ class Scroll:
     def update(group):
         if group in Scroll.manager:
             current = Scroll.manager[group]
-            pygame.draw.rect(Scroll.window, "WHITE", current.rect)
-            pygame.draw.rect(Scroll.window, "BLACK", current.rect, 2)
+            Scroll.window.blit(current.color(), current.rect)
+            pygame.draw.rect(Scroll.window, COLORS["BLACK"], current.rect, 2)
 
             for line in current.elements:
                 for obj in line:
@@ -449,13 +450,16 @@ class Scroll:
 
     @staticmethod
     def events(event, group, mouse):
-        if Scroll.manager[group].rect.collidepoint(mouse):
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 4:
-                    if Scroll.manager[group].elements[0][0].rect.y <= Scroll.manager[group].rect.y:
-                        Scroll.manager[group].move(Scroll.manager[group].movespeed)
-                elif event.button == 5:
-                    Scroll.manager[group].move(-Scroll.manager[group].movespeed)
+        try:
+            if Scroll.manager[group].rect.collidepoint(mouse):
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 4:
+                        if Scroll.manager[group].elements[0][0].rect.y <= Scroll.manager[group].rect.y:
+                            Scroll.manager[group].move(Scroll.manager[group].movespeed)
+                    elif event.button == 5:
+                        Scroll.manager[group].move(-Scroll.manager[group].movespeed)
+        except KeyError:
+            pass
 
     def move(self, amount):
         current = self.manager[self.group]

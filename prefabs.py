@@ -4,15 +4,13 @@ import matrix
 from settings import *
 from maps import *
 from functools import partial
-import textures
+from textures import Texture
 from ui import *
 import copy
 
 
 # This is where dreams come to die
 class Prefab:
-    texture = textures.Texture()
-
     def __init__(self, parent):
         self.parent = parent
 

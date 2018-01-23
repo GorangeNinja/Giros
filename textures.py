@@ -1,7 +1,6 @@
 import pygame
 import os
 from settings import *
-from maps import *
 import time
 
 
@@ -21,15 +20,53 @@ class Texture:
     tick = time.time()
     animationSpeed = 10
 
-    def __call__(self, name, position, resolution):
-        #self.fps = int(time.time() * self.animationSpeed - self.tick * self.animationSpeed)
-        if str(resolution) not in self.scaled:
-            self.scaled[str(resolution)] = {}
+    def __init__(self, resolution, name, position=0, add=True):
+        self.name = name
+        if self.name in COLORS:
+            self.color = True
+        else:
+            self.color = False
+        self.resolution = resolution
+        self.s_resolution = str(resolution)
+        self.position = position
 
-        if name not in self.scaled[str(resolution)]:
-            self.__addScaled(name, resolution, position)
+        if add:
+            self.image = self.__add()
 
-        return self.scaled[str(resolution)][name][position]
+    def __call__(self):
+        return self.image
+
+    def rescale(self, resolution):
+        self.resolution = resolution
+        self.s_resolution = str(resolution)
+        self.image = self.__add()
+
+    def rename(self, name, position=0):
+        self.name = name
+        if self.name in COLORS:
+            self.color = True
+        else:
+            self.color = False
+        self.image = self.__add()
+
+    def __add(self):
+        # If the resolution doesn't exist add it to dict
+        if self.s_resolution not in self.scaled:
+            self.scaled[self.s_resolution] = {}
+
+        # If the name doesn't exist add an empty list
+        if self.name not in self.scaled[self.s_resolution]:
+            self.scaled[self.s_resolution][self.name] = [None]
+
+        # If the position you're looking for is outside existing ones, extend the list to fit it
+        while len(self.scaled[self.s_resolution][self.name]) < self.position+1:
+            self.scaled[self.s_resolution][self.name].append(None)
+
+        # If the texture doesn't exist in the scaled dict, we make it
+        if self.scaled[self.s_resolution][self.name][self.position] is None:
+            self.__addScaled(self.name, self.resolution, self.position, self.color)
+
+        return self.scaled[self.s_resolution][self.name][self.position]
 
     def bulk(self, folder="images"):
         # Loads everything in the textures folder
@@ -74,21 +111,13 @@ class Texture:
         except KeyError:
             self.native[filename] = [img]
 
-    def __addScaled(self, filename, resolution, position):
-        if filename in COLORS:
-            try:
-                self.scaled[str(resolution)][filename].append(pygame.Surface(resolution, COLORS[filename]))
-
-            except:
-                self.scaled[str(resolution)][filename] = [pygame.Surface(resolution, COLORS[filename])]
-
+    def __addScaled(self, filename, resolution, position, color):
+        if color:
+            surface = pygame.Surface(resolution)
+            surface.fill(COLORS[filename])
+            self.scaled[str(resolution)][filename] = [surface]
         else:
-            try:
-                self.scaled[str(resolution)][filename].append(pygame.transform.scale(self.native[filename][position],
-                                                                                     resolution))
-
-            except KeyError:
-                self.scaled[str(resolution)][filename] = [pygame.transform.scale(self.native[filename], resolution)]
+            self.scaled[str(resolution)][filename][position] = pygame.transform.scale(self.native[filename][position], resolution)
 
     def __getInfo(self, filename):
         return filename.split("_")

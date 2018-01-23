@@ -5,7 +5,6 @@ import copy
 class Grid:
     def __init__(self, size, fill=int):
         self.width, self.height = size
-        # Deepcopy cause fill is a class, caused some issues with Tile class ontop list
         self.matrix = [[copy.deepcopy(fill) for y in range(self.height)] for x in range(self.width)]
 
     def get(self, x, y):
@@ -31,6 +30,7 @@ class Grid:
 
     def line(self, x1, y1, x2, y2):
         """Bresenham's line algorithm"""
+        # TODO Fix this so it works in all directions
         err = abs(y2 - y1 / x2 - x1)
         error = 0.0
         y = y1
@@ -49,9 +49,3 @@ class Grid:
         """Fills the selected area with one value"""
         for i in func:
             self.put(i[0], i[1], value)
-
-    def search(self, func, variable, value):
-        """Accepts both generator functions and lists"""
-        for i in func:
-            if getattr(i[2], variable) == value:
-                yield i

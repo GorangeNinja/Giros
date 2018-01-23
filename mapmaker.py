@@ -14,21 +14,17 @@ class Maker:
         self.window = pygame.display.set_mode(WINDOW)
         self.clock = pygame.time.Clock()
         self.group = "maker"
-        self.sList = ["error_alpha.png", "error_alpha.png", "error_alpha.png", "error_alpha.png", "error_alpha.png"]
+        self.sList = [["error_alpha.png"], ["error_alpha.png"], ["error_alpha.png"], ["error_alpha.png"], ["error_alpha.png"]]
         self.sCurrent = 0
-        self.secondaryTexture = BLACK
+        self.secondaryTexture = COLORS["BLACK"]
         self.selection = None
         self.page = 0
         self.thumbnailSize = 32
         self.currentLayer = 0
         self.map = Map([15, 12], "first")
-
         self.tile = Tile(None)
-        self.tile.texture.bulk()
-        self.message = Message("", 0)
+        Texture(0, 0, 0).bulk("")
         self.prefab = Prefab(self)
-        self.inputBox = Input((0, 0, 0, 0), "", self.group)
-        self.displayBox = Display((0, 0, 0, 0), self.group)
 
         self.defaultUI()
 
@@ -43,16 +39,13 @@ class Maker:
 
     def loop(self):
         while self.running:
-            self.window.fill(BLACK)
+            self.window.fill(COLORS["BLACK"])
             # Draws all tiles
             for ele in Map.m.grid.all():
                 ele[2].blit(ele[0], ele[1])
 
             # Draws all buttons
-            self.button.update(self.group, self.mouse)
-            self.displayBox.update(self.group, self.mouse)
-            self.inputBox.update(self.group, self.mouse)
-            self.message.update()
+            update_all(self.group, self.mouse)
 
             self.events()
 
@@ -68,6 +61,7 @@ class Maker:
         # So if I put <if self.selection is None> you wouldn't be able to move, etc...
         try:
             for event in pygame.event.get():
+                Scroll.events(event, self.group, self.mouse)
                 if event.type == pygame.QUIT:
                     self.prefab.o_quit()
                 # Checks if the mouse isn't on a button or display box
@@ -155,22 +149,22 @@ class Maker:
         Button((160, 0, 160, 30), self.prefab.o_textureSelect, "Textures", self.group)
         Button((320, 0, 160, 30), self.prefab.o_settings, "Settings", self.group)
         Display((0, b, 240, 30), self.group, text="Map: "+Map.m.name)
-        Display((240, b, 320, 30), self.group, text="Texture: "+self.sList[self.sCurrent])
+        Display((240, b, 320, 30), self.group, text="Texture: "+self.sList[self.sCurrent][0])
         for i in range(5):
             if i == self.sCurrent:
                 Display((560+i*30, b, 30, 30), self.group, func=partial(self.selected, i),
-                        image=self.sList[i], outline=5, oColor=RED)
+                        color=self.sList[i], outline=5, oColor="RED")
             else:
-                Display((560+i*30, b, 30, 30), self.group, func=partial(self.selected, i), image=self.sList[i])
+                Display((560+i*30, b, 30, 30), self.group, func=partial(self.selected, i), color=self.sList[i])
 
         Display((WINDOW[0]-110, b, 80, 30), self.group, text="Layer", align="m")
         for i in range(6):
             if i == self.currentLayer:
                 Display((WINDOW[0]-30,b-i*30,30,30), self.group, str(i), func=partial(self.layer, i),
-                        color=DARKGREY, align="m")
+                        color=["DARKGREY"], align="m")
             else:
                 Display((WINDOW[0]-30,b-i*30,30,30), self.group, str(i), func=partial(self.layer, i),
-                        color=GREY, align="m")
+                        color=["GREY"], align="m")
 
     def resetDisplay(self):
         self.button.killall(self.group)

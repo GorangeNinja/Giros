@@ -1,21 +1,18 @@
 import pygame
-import math
-import textures
-from ui import Message
+from ui import *
 from maps import *
 from settings import *
+import math
 
 
 class Tile:
     window = pygame.display.set_mode((1, 1))
 
-    texture = textures.Texture()
-
     # When I need to rescale the overlays
     overlayList = []
 
-    def __init__(self, image, drawOutline=True, outlineColor=DARKGREY, outlineWidth=1):
-        self.image = [image, None, None, None, None, None]  # Either color, or image name
+    def __init__(self, image, drawOutline=True, outlineColor=COLORS["DARKGREY"], outlineWidth=1):
+        self.image = [Texture((Map.m.tileSize[0], Map.m.tileSize[1]), *image), None, None, None, None, None]
         self.overlay = None  # Use the overlayer func, adds transparent colors
 
         self.drawOutline = drawOutline
@@ -28,10 +25,8 @@ class Tile:
         py = y * Map.m.tileSize[1] + Map.m.margin[1]
 
         for image in self.image:
-            if type(image) is tuple:  # If it's a color
-                pygame.draw.rect(self.window, image, (px, py, Map.m.tileSize[0], Map.m.tileSize[1]))
-            elif type(image) is str:  # If it's an image
-                self.window.blit(self.texture(image), (px, py))
+            if image is not None:
+                self.window.blit(image(), (px, py))
 
         # Draws the transparent overlay
         if self.overlay is not None:
@@ -51,8 +46,6 @@ class Tile:
             self.alpha = alpha
 
     def rescale(self):
-        self.texture.rescale()
-
         for ele in self.overlayList:
             # Recalls the overlay function, to reset the scale
             if ele.overlay is not None:
